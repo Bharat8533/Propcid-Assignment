@@ -1,8 +1,15 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const schemaPath = path.resolve(__dirname, '../../schema.sql');
 
 const { Pool } = pg;
 
@@ -26,13 +33,22 @@ export const pool = new Pool(
 
 let isPostgresConnected = false;
 
-// Test DB connection
+// Test DB connection & auto-create tables
 export async function initDb() {
   try {
     const client = await pool.connect();
     isPostgresConnected = true;
+
+    // Automatically verify and create tables, indexes, extensions, and seeds
+    if (fs.existsSync(schemaPath)) {
+      const sql = fs.readFileSync(schemaPath, 'utf8');
+      await client.query(sql);
+      console.log('[DB] Connected to PostgreSQL. Tables verified / auto-created successfully.');
+    } else {
+      console.log('[DB] Connected to PostgreSQL successfully.');
+    }
+
     client.release();
-    console.log('[DB] Connected to PostgreSQL successfully.');
   } catch (err) {
     console.warn(`[DB] PostgreSQL connection notice: ${err.message}.`);
     console.warn('[DB] Fallback database adapter active.');
