@@ -1,7 +1,6 @@
 import React from 'react';
-import { DEMO_STAFF_USERS } from '../constants/indianData';
 
-export default function Navbar({ currentUser, activeTab, onTabChange, onLogout, onSwitchUser }) {
+export default function Navbar({ currentUser, activeTab, onTabChange, onLogout }) {
   if (!currentUser) return null;
 
   return (
@@ -44,43 +43,29 @@ export default function Navbar({ currentUser, activeTab, onTabChange, onLogout, 
           </button>
         </nav>
 
-        {/* User Info & Switcher */}
+        {/* Authenticated User Profile */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 border-r border-slate-200 pr-3">
-            <span className="text-xs text-slate-500">Switch user:</span>
-            <select
-              value={currentUser.id}
-              onChange={(e) => {
-                const u = DEMO_STAFF_USERS.find(user => user.id === Number(e.target.value));
-                if (u) onSwitchUser(u);
-              }}
-              className="text-xs bg-slate-50 text-slate-700 font-medium border border-slate-200 rounded px-2 py-1 outline-none cursor-pointer"
-            >
-              {DEMO_STAFF_USERS.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.role})
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-xs font-semibold text-slate-700">
-              {currentUser.name.charAt(0)}
+              {currentUser.name ? currentUser.name.charAt(0) : 'U'}
             </div>
             <span className="text-xs font-semibold text-slate-800 hidden md:inline">
               {currentUser.name}
             </span>
-            <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
-              currentUser.role === 'admin' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
-            }`}>
+            <span
+              className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                currentUser.role === 'admin'
+                  ? 'bg-amber-100 text-amber-800'
+                  : 'bg-blue-100 text-blue-800'
+              }`}
+            >
               {currentUser.role}
             </span>
           </div>
 
           <button
             onClick={onLogout}
-            className="text-xs text-slate-500 hover:text-slate-900 font-medium ml-1 px-2 py-1 rounded hover:bg-slate-100"
+            className="text-xs text-slate-500 hover:text-slate-900 font-medium ml-1 px-2.5 py-1 rounded border border-slate-200 hover:bg-slate-50 transition-colors"
           >
             Sign out
           </button>

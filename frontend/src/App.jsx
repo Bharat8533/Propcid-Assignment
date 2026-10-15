@@ -3,7 +3,6 @@ import Navbar from './components/Navbar';
 import LoginPage from './pages/LoginPage';
 import RegistrationPage from './pages/RegistrationPage';
 import ReportPage from './pages/ReportPage';
-import { DEMO_STAFF_USERS } from './constants/indianData';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export default function App() {
@@ -62,22 +61,6 @@ export default function App() {
     setSelectedRegistrationId(null);
   };
 
-  const handleSwitchUser = async (user) => {
-    try {
-      const data = await api.login(user.email, user.password);
-      setCurrentUser(data.user);
-      localStorage.setItem('estatedesk_user', JSON.stringify(data.user));
-      localStorage.setItem('estatedesk_token', data.token);
-      if (data.user.role === 'admin') {
-        setActiveTab('report');
-      }
-      setSelectedRegistrationId(null);
-      showToast(`Switched account to ${data.user.name} (${data.user.role.toUpperCase()})`, 'info');
-    } catch (err) {
-      showToast(err.message || 'Failed to switch user', 'error');
-    }
-  };
-
   const handleNavigateToForm = () => {
     setSelectedRegistrationId(null);
     setActiveTab('form');
@@ -129,7 +112,6 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onLogout={handleLogout}
-        onSwitchUser={handleSwitchUser}
       />
 
       <main className="flex-1">
