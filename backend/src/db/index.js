@@ -6,14 +6,23 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// PostgreSQL Pool
-export const pool = new Pool({
-  host: process.env.PGHOST || 'localhost',
-  port: Number(process.env.PGPORT) || 5432,
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'postgres',
-  database: process.env.PGDATABASE || 'estatedesk'
-});
+// PostgreSQL Pool configuration (supports PG_URI / DATABASE_URL for Neon / cloud Postgres)
+const connectionString = process.env.PG_URI || process.env.DATABASE_URL;
+
+export const pool = new Pool(
+  connectionString
+    ? {
+        connectionString,
+        ssl: { rejectUnauthorized: false }
+      }
+    : {
+        host: process.env.PGHOST || 'localhost',
+        port: Number(process.env.PGPORT) || 5432,
+        user: process.env.PGUSER || 'postgres',
+        password: process.env.PGPASSWORD || 'postgres',
+        database: process.env.PGDATABASE || 'estatedesk'
+      }
+);
 
 let isPostgresConnected = false;
 
