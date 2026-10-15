@@ -10,6 +10,10 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
   const [resendCooldown, setResendCooldown] = useState(30);
 
   useEffect(() => {
+    if (!registrationId) {
+      setError('Registration record not saved yet. Please save draft first.');
+      return;
+    }
     const triggerSend = async () => {
       try {
         setLoading(true);
@@ -17,7 +21,7 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
         await api.sendOtp(registrationId, channel);
         setResendCooldown(30);
       } catch (err) {
-        setError(err.message);
+        setError(err.message || 'Error sending OTP');
       } finally {
         setLoading(false);
       }
@@ -43,11 +47,11 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
     try {
       setLoading(true);
       setError('');
-      await api.verifyOtp(registrationId, channel, code.trim());
-      onSuccess(channel);
+      const updated = await api.verifyOtp(registrationId, channel, code.trim());
+      onSuccess(channel, updated);
       onClose();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Invalid OTP');
     } finally {
       setLoading(false);
     }

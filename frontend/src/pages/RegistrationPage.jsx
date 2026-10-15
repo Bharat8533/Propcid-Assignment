@@ -315,41 +315,67 @@ export default function RegistrationPage({
     const err = validateField(channel, val, formData);
     if (!val || err) {
       setErrors((prev) => ({ ...prev, [channel]: err || 'Enter a valid value first' }));
-      showToast(`Please enter a valid ${channel} before requesting OTP`, 'error');
+      showToast(`Please enter a valid ${channel === 'email' ? 'Email Address' : 'Mobile Number'} first`, 'error');
+      return;
+    }
+
+    // Must have Full Name or Mobile to save draft as required by Rule R1
+    const hasName = formData.full_name && String(formData.full_name).trim().length >= 3;
+    const hasMobile = formData.mobile && normaliseMobile(formData.mobile).length === 10;
+    if (!hasName && !hasMobile) {
+      setErrors((prev) => ({
+        ...prev,
+        full_name: 'Enter Full Name (at least 3 characters) to save draft'
+      }));
+      showToast('Please enter Applicant Full Name first before requesting OTP verification', 'error');
       return;
     }
 
     let regId = formData.id;
-    if (!regId) {
-      try {
-        setLoading(true);
-        const draft = await api.createDraft(formData);
-        regId = draft.id;
-        setFormData((prev) => ({ ...prev, ...draft }));
-      } catch (e) {
-        setLoading(false);
-        showToast('Save basic details first before requesting OTP', 'error');
-        return;
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      if (!regId) {
+        // Create draft in PostgreSQL database
+        const created = await api.createDraft(formData);
+        regId = created.id;
+        setFormData((prev) => ({ ...prev, ...created, id: created.id }));
+      } else {
+        // Sync latest values to PostgreSQL database before sending OTP
+        const updated = await api.updateDraft(regId, formData);
+        setFormData((prev) => ({ ...prev, ...updated, id: regId }));
       }
+    } catch (e) {
+      setLoading(false);
+      showToast(e.message || 'Error saving draft before OTP request', 'error');
+      if (e.fields) setErrors((prev) => ({ ...prev, ...e.fields }));
+      return;
+    } finally {
+      setLoading(false);
+    }
+
+    if (!regId) {
+      showToast('Could not initiate verification: draft ID missing', 'error');
+      return;
     }
 
     setOtpModal({
       isOpen: true,
       channel,
+      registrationId: regId,
       targetValue: channel === 'mobile' ? `+91 ${normaliseMobile(val)}` : val
     });
   };
 
-  const handleOtpSuccess = (channel) => {
-    if (channel === 'email') {
-      setFormData((prev) => ({ ...prev, email_verified: true }));
-      showToast('Email verified successfully with OTP!', 'success');
-    } else if (channel === 'mobile') {
-      setFormData((prev) => ({ ...prev, mobile_verified: true }));
-      showToast('Mobile number verified successfully with OTP!', 'success');
+  const handleOtpSuccess = (channel, updatedReg) => {
+    if (updatedReg) {
+      setFormData((prev) => ({ ...prev, ...updatedReg }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [channel === 'email' ? 'email_verified' : 'mobile_verified']: true
+      }));
     }
+    showToast(`${channel === 'email' ? 'Email' : 'Mobile number'} verified successfully!`, 'success');
     setIsDirty(true);
   };
 
@@ -1148,10 +1174,10 @@ export default function RegistrationPage({
       {/* OTP Verification Modal */}
       {otpModal.isOpen && (
         <OtpModal
-          registrationId={formData.id}
+          registrationId={otpModal.registrationId || formData.id}
           channel={otpModal.channel}
           targetValue={otpModal.targetValue}
-          onClose={() => setOtpModal({ isOpen: false, channel: null, targetValue: '' })}
+          onClose={() => setOtpModal({ isOpen: false, channel: null, targetValue: '', registrationId: null })}
           onSuccess={handleOtpSuccess}
         />
       )}
