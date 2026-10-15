@@ -9,9 +9,7 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
   const [error, setError] = useState('');
   const [resendCooldown, setResendCooldown] = useState(30);
 
-  // Send initial OTP upon modal opening
   useEffect(() => {
-    let timer = null;
     const triggerSend = async () => {
       try {
         setLoading(true);
@@ -24,19 +22,13 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
         setLoading(false);
       }
     };
-
     triggerSend();
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
   }, [registrationId, channel]);
 
-  // Countdown timer for resend
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const interval = setInterval(() => {
-      setResendCooldown(prev => (prev > 0 ? prev - 1 : 0));
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
   }, [resendCooldown]);
@@ -77,45 +69,37 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-dialog">
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <ShieldCheck size={20} color="var(--primary)" />
-            <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-blue-600">
+            <ShieldCheck size={20} />
+            <span className="font-bold text-slate-900 text-base">
               Verify {channel === 'email' ? 'Email Address' : 'Mobile Number'}
             </span>
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+            className="text-slate-400 hover:text-slate-600 transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleVerify}>
-          <div className="modal-body">
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+          <div className="p-6">
+            <p className="text-sm text-slate-600 mb-3">
               We sent a 6-digit verification code to: <br />
-              <strong style={{ color: 'var(--text-primary)', wordBreak: 'break-all' }}>{targetValue}</strong>
+              <strong className="text-slate-900 break-all">{targetValue}</strong>
             </p>
 
             {/* Test hint banner */}
-            <div style={{
-              background: '#eff6ff',
-              border: '1px dashed #93c5fd',
-              borderRadius: 'var(--radius-sm)',
-              padding: '0.65rem 0.85rem',
-              fontSize: '0.8rem',
-              color: '#1e40af',
-              marginBottom: '1rem'
-            }}>
-              💡 <strong>Evaluation Note (R3):</strong> Dummy OTP is logged to server console. Test code is <code>123456</code>.
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 mb-4">
+              💡 <strong>Evaluation Note (R3):</strong> Dummy OTP test code is <code className="font-bold font-mono">123456</code>.
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="otp-input">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-600" htmlFor="otp-input">
                 Enter 6-Digit OTP
               </label>
               <input
@@ -128,42 +112,30 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="123456"
                 autoFocus
-                className={`form-control ${error ? 'has-error' : ''}`}
-                style={{
-                  fontSize: '1.4rem',
-                  letterSpacing: '0.35em',
-                  textAlign: 'center',
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 600
-                }}
+                className={`w-full min-h-[44px] px-3.5 py-2 rounded-lg border text-slate-900 text-xl font-mono tracking-[0.35em] text-center font-semibold outline-none transition-all ${
+                  error
+                    ? 'border-red-500 bg-red-50/30'
+                    : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                }`}
               />
               {error && (
-                <div className="field-error" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div className="text-xs text-red-600 font-medium flex items-center gap-1 mt-1">
                   <AlertCircle size={14} />
                   <span>{error}</span>
                 </div>
               )}
             </div>
 
-            {/* Resend status & Cooldown */}
-            <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
-              <span style={{ color: 'var(--text-muted)' }}>
-                Valid for 5 minutes • 3 attempts max
-              </span>
+            {/* Resend & Attempts status */}
+            <div className="mt-4 flex justify-between items-center text-xs">
+              <span className="text-slate-400">Valid for 5 mins • 3 attempts max</span>
               <button
                 type="button"
                 onClick={handleResend}
                 disabled={resendCooldown > 0 || resending}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: resendCooldown > 0 ? 'var(--text-muted)' : 'var(--primary)',
-                  fontWeight: 600,
-                  cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.3rem'
-                }}
+                className={`font-semibold flex items-center gap-1 transition-colors ${
+                  resendCooldown > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'
+                }`}
               >
                 <RefreshCw size={13} className={resending ? 'animate-spin' : ''} />
                 {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
@@ -171,11 +143,19 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
             </div>
           </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+              onClick={onClose}
+            >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading || code.length !== 6}>
+            <button
+              type="submit"
+              disabled={loading || code.length !== 6}
+              className="px-5 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {loading ? 'Verifying...' : 'Verify & Continue'}
             </button>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Lock, Mail, ArrowRight, ShieldCheck, UserCheck } from 'lucide-react';
+import { Building2, Lock, Mail, ArrowRight } from 'lucide-react';
 import { DEMO_STAFF_USERS } from '../constants/indianData';
 import { api } from '../services/api';
 
@@ -44,174 +44,102 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1.5rem',
-      background: 'linear-gradient(135deg, #f0f4f8 0%, #dbeafe 100%)'
-    }}>
-      <div style={{
-        maxWidth: '460px',
-        width: '100%',
-        background: '#ffffff',
-        borderRadius: 'var(--radius-lg)',
-        boxShadow: 'var(--shadow-xl)',
-        border: '1px solid var(--border)',
-        overflow: 'hidden'
-      }}>
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-slate-100 to-blue-50">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
         {/* Header */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-          color: 'white',
-          padding: '2rem 1.75rem',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-            borderRadius: 'var(--radius-md)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '0.75rem',
-            boxShadow: '0 4px 12px rgba(37,99,235,0.4)'
-          }}>
-            <Building2 size={26} color="white" />
+        <div className="bg-slate-900 text-white p-6 sm:p-8 text-center">
+          <div className="w-12 h-12 bg-blue-600 rounded-xl inline-flex items-center justify-center mb-3 shadow-lg shadow-blue-500/30">
+            <Building2 size={26} className="text-white" />
           </div>
-          <h1 style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
-            EstateDesk Staff Portal
-          </h1>
-          <p style={{ fontSize: '0.825rem', color: '#94a3b8', marginTop: '0.35rem' }}>
-            Builder &amp; Broker Registration Module
-          </p>
+          <h1 className="text-xl font-bold tracking-tight">EstateDesk Staff Portal</h1>
+          <p className="text-xs text-slate-400 mt-1">Builder &amp; Broker Registration Module</p>
         </div>
 
         {/* Body */}
-        <div style={{ padding: '2rem 1.75rem' }}>
+        <div className="p-6 sm:p-8">
           {errorMessage && (
-            <div style={{
-              background: 'var(--rose-light)',
-              color: 'var(--rose)',
-              border: '1px solid #fecaca',
-              borderRadius: 'var(--radius-sm)',
-              padding: '0.75rem 1rem',
-              fontSize: '0.85rem',
-              fontWeight: 500,
-              marginBottom: '1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
+            <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg p-3 text-xs font-medium mb-4 flex items-center gap-2">
               <span>⚠️</span>
               <span>{errorMessage}</span>
             </div>
           )}
 
-          <form onSubmit={handleLogin}>
-            <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-              <label className="form-label" htmlFor="staff-email">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="staff-email">
                 Staff Email Address
               </label>
-              <div style={{ position: 'relative' }}>
+              <div className="relative">
                 <input
                   id="staff-email"
                   type="email"
-                  className="form-control"
-                  style={{ paddingLeft: '2.4rem' }}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                   placeholder="name@test.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   required
                 />
-                <Mail
-                  size={17}
-                  style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}
-                />
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               </div>
             </div>
 
-            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-              <label className="form-label" htmlFor="staff-password">
+            <div>
+              <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="staff-password">
                 Password
               </label>
-              <div style={{ position: 'relative' }}>
+              <div className="relative">
                 <input
                   id="staff-password"
                   type="password"
-                  className="form-control"
-                  style={{ paddingLeft: '2.4rem' }}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   required
                 />
-                <Lock
-                  size={17}
-                  style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}
-                />
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               </div>
             </div>
 
             <button
               type="submit"
-              className="btn btn-primary"
               disabled={loading}
-              style={{ width: '100%', fontSize: '0.95rem', height: '44px' }}
+              className="w-full py-2.5 rounded-lg bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <span>{loading ? 'Authenticating...' : 'Sign In to Portal'}</span>
-              <ArrowRight size={17} />
+              <ArrowRight size={16} />
             </button>
           </form>
 
           {/* Quick Demo Logins for Evaluator */}
-          <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              color: 'var(--text-muted)',
-              marginBottom: '0.75rem',
-              textAlign: 'center'
-            }}>
+          <div className="mt-8 border-t border-slate-100 pt-6">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">
               ⚡ Quick Test Credentials (One-Click)
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div className="space-y-2">
               {DEMO_STAFF_USERS.map((staff) => (
                 <button
                   key={staff.id}
                   type="button"
                   onClick={() => handleQuickLogin(staff)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.6rem 0.85rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border)',
-                    background: '#f8fafc',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease'
-                  }}
-                  onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--primary)')}
-                  onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
+                  className="w-full flex items-center justify-between p-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-white hover:border-blue-400 transition-all text-left"
                 >
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
-                      {staff.name}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      {staff.email} • <span style={{ fontFamily: 'var(--font-mono)' }}>{staff.password}</span>
+                    <div className="font-semibold text-xs text-slate-800">{staff.name}</div>
+                    <div className="text-[11px] text-slate-500 font-mono">
+                      {staff.email} • {staff.password}
                     </div>
                   </div>
-                  <span className={`user-role-pill ${staff.role === 'admin' ? 'role-admin' : 'role-agent'}`}>
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      staff.role === 'admin'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-indigo-100 text-indigo-800'
+                    }`}
+                  >
                     {staff.role}
                   </span>
                 </button>

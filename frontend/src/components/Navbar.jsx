@@ -1,32 +1,36 @@
 import React from 'react';
-import { Building2, FileText, BarChart3, LogOut, UserCheck } from 'lucide-react';
+import { Building2, FileText, BarChart3, LogOut } from 'lucide-react';
 import { DEMO_STAFF_USERS } from '../constants/indianData';
 
 export default function Navbar({ currentUser, activeTab, onTabChange, onLogout, onSwitchUser }) {
   if (!currentUser) return null;
 
   return (
-    <nav className="navbar">
-      <div className="navbar-inner">
+    <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         {/* Brand */}
-        <div className="brand">
-          <div className="brand-icon">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 bg-blue-600 text-white flex items-center justify-center rounded-lg shadow-sm">
             <Building2 size={20} />
           </div>
           <div>
-            <span>EstateDesk</span>
-            <span style={{ fontSize: '0.65rem', display: 'block', color: 'var(--text-muted)', fontWeight: 500 }}>
+            <span className="font-bold text-slate-900 tracking-tight text-lg">EstateDesk</span>
+            <span className="text-[10px] block text-slate-400 font-medium leading-none">
               Registration Portal
             </span>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="nav-links">
+        <div className="flex items-center gap-2">
           {currentUser.role === 'agent' && (
             <button
-              className={`nav-btn ${activeTab === 'form' ? 'active' : ''}`}
               onClick={() => onTabChange('form')}
+              className={`px-3 py-1.5 rounded-md text-sm font-semibold flex items-center gap-1.5 transition-all ${
+                activeTab === 'form'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
             >
               <FileText size={16} />
               <span>Registration Form</span>
@@ -34,8 +38,12 @@ export default function Navbar({ currentUser, activeTab, onTabChange, onLogout, 
           )}
 
           <button
-            className={`nav-btn ${activeTab === 'report' ? 'active' : ''}`}
             onClick={() => onTabChange('report')}
+            className={`px-3 py-1.5 rounded-md text-sm font-semibold flex items-center gap-1.5 transition-all ${
+              activeTab === 'report'
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            }`}
           >
             <BarChart3 size={16} />
             <span>{currentUser.role === 'admin' ? 'Admin Dashboard' : 'My Registrations'}</span>
@@ -43,10 +51,16 @@ export default function Navbar({ currentUser, activeTab, onTabChange, onLogout, 
         </div>
 
         {/* User Profile & Demo Switcher */}
-        <div className="nav-user">
-          <div className="user-badge hide-on-mobile">
-            <span className="user-name">{currentUser.name}</span>
-            <span className={`user-role-pill ${currentUser.role === 'admin' ? 'role-admin' : 'role-agent'}`}>
+        <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
+          <div className="hidden sm:flex flex-col text-right">
+            <span className="text-xs font-semibold text-slate-800">{currentUser.name}</span>
+            <span
+              className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded-full self-end ${
+                currentUser.role === 'admin'
+                  ? 'bg-amber-100 text-amber-800'
+                  : 'bg-indigo-100 text-indigo-800'
+              }`}
+            >
               {currentUser.role}
             </span>
           </div>
@@ -59,16 +73,9 @@ export default function Navbar({ currentUser, activeTab, onTabChange, onLogout, 
               if (u) onSwitchUser(u);
             }}
             title="Quick switch user role for testing"
-            style={{
-              padding: '0.35rem 0.5rem',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border)',
-              fontSize: '0.75rem',
-              background: '#f8fafc',
-              cursor: 'pointer'
-            }}
+            className="px-2 py-1 rounded border border-slate-200 text-xs bg-slate-50 text-slate-700 cursor-pointer focus:outline-none focus:border-blue-500"
           >
-            {DEMO_STAFF_USERS.map(u => (
+            {DEMO_STAFF_USERS.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.role === 'admin' ? '👑' : '👤'} {u.name} ({u.role})
               </option>
@@ -76,12 +83,11 @@ export default function Navbar({ currentUser, activeTab, onTabChange, onLogout, 
           </select>
 
           <button
-            className="btn btn-secondary btn-sm"
             onClick={onLogout}
             title="Log out"
+            className="p-1.5 rounded border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
           >
-            <LogOut size={15} />
-            <span className="hide-on-mobile">Logout</span>
+            <LogOut size={16} />
           </button>
         </div>
       </div>
