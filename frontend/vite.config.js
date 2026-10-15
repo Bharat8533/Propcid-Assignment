@@ -10,6 +10,7 @@ export default defineConfig({
       '/auth': 'http://localhost:5000',
       '/registrations': 'http://localhost:5000',
       '/reports': 'http://localhost:5000',
+      '/health': 'http://localhost:5000'
     }
   }
 })
