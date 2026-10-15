@@ -408,10 +408,16 @@ export default function RegistrationPage({
             className={`px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase ${
               formData.status === 'submitted'
                 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300/60 shadow-sm'
-                : 'bg-amber-100 text-amber-800 border border-amber-300/60 shadow-sm'
+                : formData.id
+                ? 'bg-amber-100 text-amber-800 border border-amber-300/60 shadow-sm'
+                : 'bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-sm'
             }`}
           >
-            {formData.status === 'submitted' ? '✓ Submitted' : 'Draft In-Progress'}
+            {formData.status === 'submitted'
+              ? '✓ Submitted'
+              : formData.id
+              ? 'Draft (Saved)'
+              : 'New Registration'}
           </span>
         </div>
       </div>
