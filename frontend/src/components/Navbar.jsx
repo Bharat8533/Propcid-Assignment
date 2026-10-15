@@ -13,8 +13,7 @@ export default function Navbar({ currentUser, activeTab, onTabChange, onLogout, 
             ED
           </div>
           <div>
-            <span className="font-bold text-slate-900 text-base tracking-tight">EstateDesk</span>
-            
+            <span className="font-bold text-slate-900 text-base tracking-tight">EstateDesk</span>   
           </div>
         </div>
 
