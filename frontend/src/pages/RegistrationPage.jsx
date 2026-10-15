@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Building2, Briefcase, CheckCircle2, Save, Send,
-  Trash2, ShieldCheck, ArrowLeft, RefreshCw, Lock, Sparkles, Check, CheckCircle
+  Trash2, ShieldCheck, ArrowLeft, RefreshCw, Lock, Sparkles, Check, CheckCircle,
+  ArrowRight, ChevronRight, HelpCircle
 } from 'lucide-react';
 import {
   INDIAN_STATES_AND_UTS,
@@ -22,7 +23,7 @@ import OtpModal from '../components/OtpModal';
 import DeleteModal from '../components/DeleteModal';
 
 const INITIAL_FORM = {
-  user_type: 'builder',
+  user_type: '', // Empty initially so agent picks category first
   // Common (12)
   full_name: '',
   email: '',
@@ -156,8 +157,17 @@ export default function RegistrationPage({
     }
   };
 
-  const handleTypeSwitch = (newType) => {
-    if (isReadOnly || formData.user_type === newType) return;
+  const handleSelectCategory = (type) => {
+    if (isReadOnly) return;
+    setFormData((prev) => ({
+      ...prev,
+      user_type: type
+    }));
+    setIsDirty(true);
+  };
+
+  const handleSwitchCategory = () => {
+    if (isReadOnly) return;
 
     const hasSpecificData =
       (formData.user_type === 'broker' && (formData.pan_number || formData.about)) ||
@@ -166,15 +176,14 @@ export default function RegistrationPage({
 
     if (hasSpecificData) {
       const confirmSwitch = window.confirm(
-        `Switching to ${newType.toUpperCase()} will discard existing ${formData.user_type} specific fields. Continue?`
+        `Switching category will discard all ${formData.user_type}-specific data. Continue?`
       );
       if (!confirmSwitch) return;
     }
 
-    setIsDirty(true);
     setFormData((prev) => ({
       ...prev,
-      user_type: newType,
+      user_type: '',
       pan_number: '',
       about: '',
       company_name: '',
@@ -182,7 +191,6 @@ export default function RegistrationPage({
       gst_number: '',
       about_company: ''
     }));
-
     setErrors({});
   };
 
@@ -380,25 +388,166 @@ export default function RegistrationPage({
     );
   }
 
+  // =========================================================================
+  // STEP 1: CATEGORY SELECTION SCREEN (When user_type is not yet selected)
+  // =========================================================================
+  if (!formData.user_type) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 pb-20">
+        <div className="flex items-center justify-between mb-8">
+          <button
+            className="px-3.5 py-1.5 rounded-xl border border-slate-200/80 bg-white/80 text-slate-700 text-xs font-bold hover:bg-white shadow-sm flex items-center gap-1.5 transition-all"
+            onClick={onNavigateBack}
+          >
+            <ArrowLeft size={14} />
+            <span>Back to Dashboard</span>
+          </button>
+
+          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full">
+            Step 1 of 2: Select Category
+          </span>
+        </div>
+
+        <div className="text-center max-w-xl mx-auto mb-10">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+            New Registration Portal
+          </h1>
+          <p className="text-sm text-slate-500 mt-2">
+            Please choose the category of applicant you want to register. The registration form and compliance fields will adapt accordingly.
+          </p>
+        </div>
+
+        {/* Category Choice Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* BUILDER CARD */}
+          <div
+            onClick={() => handleSelectCategory('builder')}
+            className="bg-white border-2 border-slate-200/90 hover:border-indigo-600 rounded-3xl p-7 shadow-card hover:shadow-card-hover cursor-pointer transition-all group flex flex-col justify-between relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-2xl -mr-10 -mt-10 group-hover:scale-150 transition-transform" />
+            
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-colors shadow-sm mb-5">
+                <Building2 size={30} />
+              </div>
+
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 mb-2">
+                Corporate Entity
+              </div>
+
+              <h2 className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                Real Estate Builder
+              </h2>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                Register property builders, construction firms, and private developers with corporate credentials.
+              </p>
+
+              <div className="mt-6 pt-5 border-t border-slate-100 space-y-2">
+                <div className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Required Specifics:</div>
+                <div className="text-xs text-slate-600 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                  <span>GSTIN Number (15 chars)</span>
+                </div>
+                <div className="text-xs text-slate-600 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                  <span>Corporate Entity PAN (C / F / P type)</span>
+                </div>
+                <div className="text-xs text-slate-600 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                  <span>Company Type &amp; Profile description</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-4 flex items-center justify-between text-indigo-600 font-bold text-xs group-hover:translate-x-1 transition-transform">
+              <span>Open Builder Form</span>
+              <ArrowRight size={16} />
+            </div>
+          </div>
+
+          {/* BROKER CARD */}
+          <div
+            onClick={() => handleSelectCategory('broker')}
+            className="bg-white border-2 border-slate-200/90 hover:border-emerald-600 rounded-3xl p-7 shadow-card hover:shadow-card-hover cursor-pointer transition-all group flex flex-col justify-between relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-2xl -mr-10 -mt-10 group-hover:scale-150 transition-transform" />
+            
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center transition-colors shadow-sm mb-5">
+                <Briefcase size={30} />
+              </div>
+
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
+                Individual Consultant
+              </div>
+
+              <h2 className="text-xl font-black text-slate-900 group-hover:text-emerald-600 transition-colors">
+                Real Estate Broker
+              </h2>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                Register independent brokers, real estate consultants, and channel partner agents.
+              </p>
+
+              <div className="mt-6 pt-5 border-t border-slate-100 space-y-2">
+                <div className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Required Specifics:</div>
+                <div className="text-xs text-slate-600 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                  <span>Personal PAN (4th letter must be "P")</span>
+                </div>
+                <div className="text-xs text-slate-600 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                  <span>Professional Network Bio (50-500 chars)</span>
+                </div>
+                <div className="text-xs text-slate-600 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                  <span>Years of Experience &amp; Expertise</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-4 flex items-center justify-between text-emerald-600 font-bold text-xs group-hover:translate-x-1 transition-transform">
+              <span>Open Broker Form</span>
+              <ArrowRight size={16} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // STEP 2: CATEGORY-SPECIFIC FORM SCREEN
+  // =========================================================================
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20">
       {/* Top Breadcrumb & Status Navigation */}
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-        <button
-          className="px-3.5 py-1.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-sm text-slate-700 text-xs font-bold hover:bg-white hover:border-slate-300 shadow-sm flex items-center gap-1.5 transition-all"
-          onClick={() => {
-            if (isDirty && formData.status !== 'submitted') {
-              if (window.confirm('You have unsaved changes. Leave anyway?')) {
+        <div className="flex items-center gap-2">
+          <button
+            className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-sm text-slate-700 text-xs font-bold hover:bg-white shadow-sm flex items-center gap-1.5 transition-all"
+            onClick={() => {
+              if (isDirty && formData.status !== 'submitted') {
+                if (window.confirm('You have unsaved changes. Leave anyway?')) {
+                  onNavigateBack();
+                }
+              } else {
                 onNavigateBack();
               }
-            } else {
-              onNavigateBack();
-            }
-          }}
-        >
-          <ArrowLeft size={14} />
-          <span>Back to List</span>
-        </button>
+            }}
+          >
+            <ArrowLeft size={14} />
+            <span>Dashboard</span>
+          </button>
+
+          {!isReadOnly && (
+            <button
+              onClick={handleSwitchCategory}
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors"
+            >
+              ← Change Category
+            </button>
+          )}
+        </div>
 
         <div className="flex items-center gap-3">
           {formData.id && (
@@ -433,16 +582,18 @@ export default function RegistrationPage({
       {/* Sticky Completion Bar Header */}
       <div className="bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-card p-5 mb-6">
         <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-              <Sparkles size={16} />
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-white ${
+              formData.user_type === 'builder' ? 'bg-indigo-600 shadow-sm shadow-indigo-600/30' : 'bg-emerald-600 shadow-sm shadow-emerald-600/30'
+            }`}>
+              {formData.user_type === 'builder' ? <Building2 size={18} /> : <Briefcase size={18} />}
             </div>
             <div>
-              <span className="font-extrabold text-slate-900 text-sm sm:text-base">
-                Registration Completion
+              <span className="font-extrabold text-slate-900 text-sm sm:text-base capitalize">
+                {formData.user_type} Registration Form
               </span>
               <span className="text-[11px] text-slate-400 block -mt-0.5 font-medium">
-                Rule R7: Formula Verification Meter
+                Rule R7: Completion Meter
               </span>
             </div>
           </div>
@@ -488,81 +639,26 @@ export default function RegistrationPage({
       {/* Main Registration Card */}
       <div className="bg-white border border-slate-200/90 rounded-2xl shadow-card overflow-hidden">
         {/* Card Header */}
-        <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-white via-slate-50/50 to-indigo-50/20">
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Registration Form</h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Fill applicant credentials. Email and Mobile must be verified via OTP prior to submission.
-          </p>
+        <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-white via-slate-50/50 to-indigo-50/20 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight capitalize">
+              {formData.user_type} Details
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Please enter valid applicant information. Email and Mobile require dummy OTP verification (`123456`).
+            </p>
+          </div>
+          <span className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold capitalize ${
+            formData.user_type === 'builder' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+          }`}>
+            {formData.user_type === 'builder' ? <Building2 size={13} /> : <Briefcase size={13} />}
+            {formData.user_type} Profile
+          </span>
         </div>
 
         <div className="p-6 sm:p-8 space-y-8">
-          {/* USER TYPE SELECTOR TABS */}
-          <div>
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-3">
-              Applicant Category <span className="text-rose-500">*</span>
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button
-                type="button"
-                className={`relative p-5 rounded-2xl border-2 text-left flex items-start gap-4 transition-all ${
-                  formData.user_type === 'builder'
-                    ? 'border-indigo-600 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/30 shadow-md shadow-indigo-500/10'
-                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                }`}
-                onClick={() => handleTypeSwitch('builder')}
-                disabled={isReadOnly}
-              >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                  formData.user_type === 'builder' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-100 text-slate-500'
-                }`}>
-                  <Building2 size={24} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-extrabold text-slate-900 text-base">Real Estate Builder</span>
-                    {formData.user_type === 'builder' && (
-                      <CheckCircle size={18} className="text-indigo-600" />
-                    )}
-                  </div>
-                  <span className="text-xs text-slate-500 mt-0.5 block leading-relaxed font-normal">
-                    Incorporated developers, LLPs &amp; firms. Requires Corporate GSTIN &amp; Entity PAN.
-                  </span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className={`relative p-5 rounded-2xl border-2 text-left flex items-start gap-4 transition-all ${
-                  formData.user_type === 'broker'
-                    ? 'border-indigo-600 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/30 shadow-md shadow-indigo-500/10'
-                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                }`}
-                onClick={() => handleTypeSwitch('broker')}
-                disabled={isReadOnly}
-              >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                  formData.user_type === 'broker' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-100 text-slate-500'
-                }`}>
-                  <Briefcase size={24} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-extrabold text-slate-900 text-base">Real Estate Broker</span>
-                    {formData.user_type === 'broker' && (
-                      <CheckCircle size={18} className="text-indigo-600" />
-                    )}
-                  </div>
-                  <span className="text-xs text-slate-500 mt-0.5 block leading-relaxed font-normal">
-                    Individual real estate advisors &amp; channel partners. Requires Individual PAN (4th letter 'P').
-                  </span>
-                </div>
-              </button>
-            </div>
-            {errors.user_type && <span className="text-xs text-rose-600 font-semibold mt-1.5 block">{errors.user_type}</span>}
-          </div>
-
           {/* SECTION 1: COMMON DETAILS */}
-          <div className="border-t border-slate-100 pt-6">
+          <div>
             <div className="flex items-center gap-2 mb-4">
               <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">1</span>
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
@@ -967,7 +1063,7 @@ export default function RegistrationPage({
             /* BROKER ONLY FIELDS (2) */
             <div className="border-t border-slate-100 pt-6">
               <div className="flex items-center gap-2 mb-4">
-                <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">4</span>
+                <span className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center">4</span>
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
                   Broker Specific Mandates
                 </h3>
