@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Building2, Briefcase, CheckCircle2, Save, Send,
-  Trash2, ShieldCheck, ArrowLeft, RefreshCw, Lock, Sparkles, Check
+  Trash2, ShieldCheck, ArrowLeft, RefreshCw, Lock, Sparkles, Check, CheckCircle
 } from 'lucide-react';
 import {
   INDIAN_STATES_AND_UTS,
@@ -373,19 +373,19 @@ export default function RegistrationPage({
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto text-center py-20 px-4">
-        <RefreshCw size={32} className="animate-spin text-blue-600 mx-auto mb-3" />
-        <p className="text-slate-600">Loading registration details...</p>
+      <div className="max-w-4xl mx-auto text-center py-24 px-4">
+        <RefreshCw size={36} className="animate-spin text-indigo-600 mx-auto mb-4" />
+        <p className="text-slate-600 font-medium">Loading registration details...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-16">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20">
       {/* Top Breadcrumb & Status Navigation */}
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <button
-          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 flex items-center gap-1.5 transition-colors"
+          className="px-3.5 py-1.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-sm text-slate-700 text-xs font-bold hover:bg-white hover:border-slate-300 shadow-sm flex items-center gap-1.5 transition-all"
           onClick={() => {
             if (isDirty && formData.status !== 'submitted') {
               if (window.confirm('You have unsaved changes. Leave anyway?')) {
@@ -402,141 +402,187 @@ export default function RegistrationPage({
 
         <div className="flex items-center gap-3">
           {formData.id && (
-            <span className="text-xs text-slate-400">Registration #{formData.id}</span>
+            <span className="text-xs font-mono font-medium text-slate-400">#REG-{String(formData.id).padStart(4, '0')}</span>
           )}
           <span
-            className={`px-3 py-1 rounded-full text-xs font-bold ${
+            className={`px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase ${
               formData.status === 'submitted'
-                ? 'bg-emerald-100 text-emerald-800'
-                : 'bg-amber-100 text-amber-800'
+                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300/60 shadow-sm'
+                : 'bg-amber-100 text-amber-800 border border-amber-300/60 shadow-sm'
             }`}
           >
-            {formData.status === 'submitted' ? '✓ Submitted (Read-only)' : 'Draft'}
+            {formData.status === 'submitted' ? '✓ Submitted' : 'Draft In-Progress'}
           </span>
         </div>
       </div>
 
       {/* Read-only Banner for Submitted / Admin */}
       {isReadOnly && (
-        <div className="bg-slate-100 border border-slate-200 rounded-xl p-3.5 mb-6 flex items-center gap-3 text-slate-700 text-xs sm:text-sm">
-          <Lock size={18} className="text-blue-600 shrink-0" />
-          <span>
+        <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-4 mb-6 flex items-center gap-3.5 shadow-md">
+          <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+            <Lock size={18} className="text-indigo-300" />
+          </div>
+          <span className="text-xs sm:text-sm font-medium text-slate-200">
             {formData.status === 'submitted'
-              ? 'This registration has been fully submitted and is locked for auditing. Fields are read-only.'
-              : 'Admin accounts have read-only permissions for registrations.'}
+              ? 'This registration is finalized and submitted. All fields are locked in read-only audit mode.'
+              : 'Administrator mode: Registrations can be inspected or audited, but creating/editing is reserved for Field Agents.'}
           </span>
         </div>
       )}
 
       {/* Sticky Completion Bar Header */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 sm:p-5 mb-6">
-        <div className="flex justify-between items-center mb-1.5">
+      <div className="bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-card p-5 mb-6">
+        <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
-            <Sparkles size={18} className="text-blue-600" />
-            <span className="font-bold text-slate-900 text-sm sm:text-base">
-              Registration Completion (Rule R7)
+            <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <Sparkles size={16} />
+            </div>
+            <div>
+              <span className="font-extrabold text-slate-900 text-sm sm:text-base">
+                Registration Completion
+              </span>
+              <span className="text-[11px] text-slate-400 block -mt-0.5 font-medium">
+                Rule R7: Formula Verification Meter
+              </span>
+            </div>
+          </div>
+          <div className="text-right">
+            <span
+              className={`text-2xl font-black tracking-tight ${
+                completionPercentage === 100 ? 'text-emerald-600' : 'text-indigo-600'
+              }`}
+            >
+              {completionPercentage}%
             </span>
           </div>
-          <span
-            className={`text-lg font-extrabold ${
-              completionPercentage === 100 ? 'text-emerald-600' : 'text-blue-600'
-            }`}
-          >
-            {completionPercentage}%
-          </span>
         </div>
 
-        <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden my-2">
+        {/* Progress Bar with glow */}
+        <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden my-2.5 p-0.5 border border-slate-200/50">
           <div
-            className={`h-full transition-all duration-300 ${
+            className={`h-full rounded-full transition-all duration-500 ease-out ${
               completionPercentage === 100
-                ? 'bg-emerald-500'
-                : 'bg-gradient-to-r from-blue-500 to-emerald-500'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-glow-emerald'
+                : 'bg-gradient-to-r from-indigo-500 via-indigo-600 to-emerald-400 shadow-glow'
             }`}
             style={{ width: `${completionPercentage}%` }}
           />
         </div>
 
-        <div className="flex justify-between text-xs text-slate-400 mt-1">
-          <span>{formData.user_type === 'broker' ? '16 items required' : '19 items required'}</span>
-          <span>
-            Email: {formData.email_verified ? '✓ Verified' : 'Pending'} • Mobile: {formData.mobile_verified ? '✓ Verified' : 'Pending'}
+        <div className="flex justify-between items-center text-xs text-slate-500 mt-2 font-medium">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+            {formData.user_type === 'broker' ? '16 required audit items' : '19 required audit items'}
           </span>
+          <div className="flex items-center gap-3">
+            <span className={`inline-flex items-center gap-1 ${formData.email_verified ? 'text-emerald-700 font-bold' : 'text-slate-400'}`}>
+              {formData.email_verified ? '✓ Email Verified' : '○ Email OTP'}
+            </span>
+            <span className={`inline-flex items-center gap-1 ${formData.mobile_verified ? 'text-emerald-700 font-bold' : 'text-slate-400'}`}>
+              {formData.mobile_verified ? '✓ Mobile Verified' : '○ Mobile OTP'}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Main Registration Card */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-slate-900">Registration Form</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Select user type and fill the mandatory registration fields.
+      <div className="bg-white border border-slate-200/90 rounded-2xl shadow-card overflow-hidden">
+        {/* Card Header */}
+        <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-white via-slate-50/50 to-indigo-50/20">
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Registration Form</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Fill applicant credentials. Email and Mobile must be verified via OTP prior to submission.
           </p>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-6">
+        <div className="p-6 sm:p-8 space-y-8">
           {/* USER TYPE SELECTOR TABS */}
           <div>
-            <label className="text-xs font-semibold text-slate-600 block mb-2">
-              User Type <span className="text-red-500">*</span>
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-3">
+              Applicant Category <span className="text-rose-500">*</span>
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
                 type="button"
-                className={`p-4 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all ${
+                className={`relative p-5 rounded-2xl border-2 text-left flex items-start gap-4 transition-all ${
                   formData.user_type === 'builder'
-                    ? 'border-blue-600 bg-blue-50/40 text-blue-600 font-bold'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    ? 'border-indigo-600 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/30 shadow-md shadow-indigo-500/10'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
                 onClick={() => handleTypeSwitch('builder')}
                 disabled={isReadOnly}
               >
-                <Building2 size={24} />
-                <span className="text-sm font-bold">Real Estate Builder</span>
-                <span className="text-xs text-slate-400 font-normal">
-                  Companies &amp; Developers (GST &amp; Corporate PAN)
-                </span>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                  formData.user_type === 'builder' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  <Building2 size={24} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-900 text-base">Real Estate Builder</span>
+                    {formData.user_type === 'builder' && (
+                      <CheckCircle size={18} className="text-indigo-600" />
+                    )}
+                  </div>
+                  <span className="text-xs text-slate-500 mt-0.5 block leading-relaxed font-normal">
+                    Incorporated developers, LLPs &amp; firms. Requires Corporate GSTIN &amp; Entity PAN.
+                  </span>
+                </div>
               </button>
 
               <button
                 type="button"
-                className={`p-4 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all ${
+                className={`relative p-5 rounded-2xl border-2 text-left flex items-start gap-4 transition-all ${
                   formData.user_type === 'broker'
-                    ? 'border-blue-600 bg-blue-50/40 text-blue-600 font-bold'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    ? 'border-indigo-600 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/30 shadow-md shadow-indigo-500/10'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                 }`}
                 onClick={() => handleTypeSwitch('broker')}
                 disabled={isReadOnly}
               >
-                <Briefcase size={24} />
-                <span className="text-sm font-bold">Real Estate Broker</span>
-                <span className="text-xs text-slate-400 font-normal">
-                  Individual Consultant (Personal PAN)
-                </span>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                  formData.user_type === 'broker' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  <Briefcase size={24} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-900 text-base">Real Estate Broker</span>
+                    {formData.user_type === 'broker' && (
+                      <CheckCircle size={18} className="text-indigo-600" />
+                    )}
+                  </div>
+                  <span className="text-xs text-slate-500 mt-0.5 block leading-relaxed font-normal">
+                    Individual real estate advisors &amp; channel partners. Requires Individual PAN (4th letter 'P').
+                  </span>
+                </div>
               </button>
             </div>
-            {errors.user_type && <span className="text-xs text-red-600 mt-1 block">{errors.user_type}</span>}
+            {errors.user_type && <span className="text-xs text-rose-600 font-semibold mt-1.5 block">{errors.user_type}</span>}
           </div>
 
           {/* SECTION 1: COMMON DETAILS */}
-          <div className="border-t border-slate-100 pt-5">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">
-              1. Basic &amp; Contact Information
-            </h3>
+          <div className="border-t border-slate-100 pt-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">1</span>
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                Identity &amp; Contact Information
+              </h3>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Full Name */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="full_name">
-                  Full Name <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="full_name">
+                  Full Name <span className="text-rose-500">*</span>
                 </label>
                 <input
                   id="full_name"
                   type="text"
-                  className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                     errors.full_name
-                      ? 'border-red-500 bg-red-50/30'
-                      : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                      ? 'border-rose-500 bg-rose-50/20'
+                      : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                   }`}
                   placeholder="e.g. Ramesh K. Sharma"
                   value={formData.full_name}
@@ -545,23 +591,23 @@ export default function RegistrationPage({
                   maxLength={60}
                 />
                 {errors.full_name ? (
-                  <span className="text-xs text-red-600 mt-0.5 block">{errors.full_name}</span>
+                  <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.full_name}</span>
                 ) : (
-                  <span className="text-[11px] text-slate-400 mt-0.5 block">3–60 chars, letters, spaces and dots only</span>
+                  <span className="text-[11px] text-slate-400 mt-1 block">3–60 chars, letters, spaces and dots only</span>
                 )}
               </div>
 
               {/* Gender */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="gender">
-                  Gender <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="gender">
+                  Gender <span className="text-rose-500">*</span>
                 </label>
                 <select
                   id="gender"
-                  className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                     errors.gender
-                      ? 'border-red-500 bg-red-50/30'
-                      : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                      ? 'border-rose-500 bg-rose-50/20'
+                      : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                   }`}
                   value={formData.gender}
                   onChange={(e) => handleInputChange('gender', e.target.value)}
@@ -572,22 +618,22 @@ export default function RegistrationPage({
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
-                {errors.gender && <span className="text-xs text-red-600 mt-0.5 block">{errors.gender}</span>}
+                {errors.gender && <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.gender}</span>}
               </div>
 
               {/* Email with OTP Verify button */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="email">
-                  Email Address <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="email">
+                  Email Address <span className="text-rose-500">*</span>
                 </label>
                 <div className="flex gap-2 items-center">
                   <input
                     id="email"
                     type="email"
-                    className={`flex-1 p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                    className={`flex-1 px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                       errors.email
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     placeholder="person@example.com"
                     value={formData.email}
@@ -595,43 +641,43 @@ export default function RegistrationPage({
                     disabled={isReadOnly}
                   />
                   {formData.email_verified ? (
-                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 shrink-0">
-                      <CheckCircle2 size={14} /> Verified
+                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-300 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 shadow-sm">
+                      <CheckCircle2 size={15} /> Verified
                     </span>
                   ) : (
                     !isReadOnly && (
                       <button
                         type="button"
-                        className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1 shrink-0"
+                        className="px-3.5 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold hover:bg-indigo-100 flex items-center gap-1.5 shrink-0 transition-colors"
                         onClick={() => handleOpenOtpModal('email')}
                         disabled={!formData.email}
                       >
-                        <ShieldCheck size={14} /> Verify
+                        <ShieldCheck size={15} /> Verify
                       </button>
                     )
                   )}
                 </div>
                 {errors.email ? (
-                  <span className="text-xs text-red-600 mt-0.5 block">{errors.email}</span>
+                  <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.email}</span>
                 ) : (
-                  <span className="text-[11px] text-slate-400 mt-0.5 block">Stored in lowercase; must be OTP-verified</span>
+                  <span className="text-[11px] text-slate-400 mt-1 block">Stored in lowercase; must be verified by OTP</span>
                 )}
               </div>
 
               {/* Mobile with OTP Verify button */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="mobile">
-                  Mobile Number <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="mobile">
+                  Mobile Number <span className="text-rose-500">*</span>
                 </label>
                 <div className="flex gap-2 items-center">
                   <input
                     id="mobile"
                     type="tel"
                     inputMode="numeric"
-                    className={`flex-1 p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                    className={`flex-1 px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all font-mono ${
                       errors.mobile
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     placeholder="+91 98765 43210"
                     value={formData.mobile}
@@ -639,60 +685,62 @@ export default function RegistrationPage({
                     disabled={isReadOnly}
                   />
                   {formData.mobile_verified ? (
-                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 shrink-0">
-                      <CheckCircle2 size={14} /> Verified
+                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-300 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 shadow-sm">
+                      <CheckCircle2 size={15} /> Verified
                     </span>
                   ) : (
                     !isReadOnly && (
                       <button
                         type="button"
-                        className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1 shrink-0"
+                        className="px-3.5 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold hover:bg-indigo-100 flex items-center gap-1.5 shrink-0 transition-colors"
                         onClick={() => handleOpenOtpModal('mobile')}
                         disabled={!formData.mobile}
                       >
-                        <ShieldCheck size={14} /> Verify
+                        <ShieldCheck size={15} /> Verify
                       </button>
                     )
                   )}
                 </div>
                 {errors.mobile ? (
-                  <span className="text-xs text-red-600 mt-0.5 block">{errors.mobile}</span>
+                  <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.mobile}</span>
                 ) : (
-                  <span className="text-[11px] text-slate-400 mt-0.5 block">10 digits starting with 6–9; OTP-verified</span>
+                  <span className="text-[11px] text-slate-400 mt-1 block">10-digit Indian mobile starting with 6–9</span>
                 )}
               </div>
 
               {/* Date of Birth */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="dob">
-                  Date of Birth <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="dob">
+                  Date of Birth <span className="text-rose-500">*</span>
                   {calculatedAge !== null && (
-                    <span className="text-blue-600 font-semibold ml-1">({calculatedAge} yrs old)</span>
+                    <span className="text-indigo-600 font-bold ml-1.5 bg-indigo-50 px-2 py-0.5 rounded-full text-[11px]">
+                      {calculatedAge} yrs old
+                    </span>
                   )}
                 </label>
                 <input
                   id="dob"
                   type="date"
-                  className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                     errors.dob
-                      ? 'border-red-500 bg-red-50/30'
-                      : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                      ? 'border-rose-500 bg-rose-50/20'
+                      : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                   }`}
                   value={formData.dob}
                   onChange={(e) => handleInputChange('dob', e.target.value)}
                   disabled={isReadOnly}
                 />
                 {errors.dob ? (
-                  <span className="text-xs text-red-600 mt-0.5 block">{errors.dob}</span>
+                  <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.dob}</span>
                 ) : (
-                  <span className="text-[11px] text-slate-400 mt-0.5 block">18–100 years old today (India date)</span>
+                  <span className="text-[11px] text-slate-400 mt-1 block">Person is 18–100 years old today (India date)</span>
                 )}
               </div>
 
               {/* Years of Experience */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="experience_years">
-                  Years of Experience <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="experience_years">
+                  Years of Experience <span className="text-rose-500">*</span>
                 </label>
                 <input
                   id="experience_years"
@@ -700,10 +748,10 @@ export default function RegistrationPage({
                   inputMode="numeric"
                   min="0"
                   max="60"
-                  className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                     errors.experience_years
-                      ? 'border-red-500 bg-red-50/30'
-                      : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                      ? 'border-rose-500 bg-rose-50/20'
+                      : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                   }`}
                   placeholder="e.g. 8"
                   value={formData.experience_years}
@@ -711,30 +759,35 @@ export default function RegistrationPage({
                   disabled={isReadOnly}
                 />
                 {errors.experience_years ? (
-                  <span className="text-xs text-red-600 mt-0.5 block">{errors.experience_years}</span>
+                  <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.experience_years}</span>
                 ) : (
-                  <span className="text-[11px] text-slate-400 mt-0.5 block">0–60, and not more than (age − 18)</span>
+                  <span className="text-[11px] text-slate-400 mt-1 block">Whole number 0–60, and not more than (age − 18)</span>
                 )}
               </div>
             </div>
           </div>
 
           {/* SECTION 2: LOCATION & ADDRESS */}
-          <div className="border-t border-slate-100 pt-5">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">2. Office Location &amp; Address</h3>
+          <div className="border-t border-slate-100 pt-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">2</span>
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                Office Location &amp; Address
+              </h3>
+            </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="office_address">
-                  Office Address <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="office_address">
+                  Office Address <span className="text-rose-500">*</span>
                 </label>
                 <textarea
                   id="office_address"
                   rows={2}
-                  className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                     errors.office_address
-                      ? 'border-red-500 bg-red-50/30'
-                      : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                      ? 'border-rose-500 bg-rose-50/20'
+                      : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                   }`}
                   placeholder="Street address, building, suite number..."
                   value={formData.office_address}
@@ -742,29 +795,29 @@ export default function RegistrationPage({
                   disabled={isReadOnly}
                   maxLength={200}
                 />
-                <div className="flex justify-between text-xs mt-0.5">
+                <div className="flex justify-between text-xs mt-1">
                   {errors.office_address ? (
-                    <span className="text-red-600">{errors.office_address}</span>
+                    <span className="text-rose-600 font-medium">{errors.office_address}</span>
                   ) : (
                     <span className="text-slate-400">10–200 characters</span>
                   )}
-                  <span className="text-slate-400">{formData.office_address.length}/200</span>
+                  <span className="text-slate-400 font-mono">{formData.office_address.length}/200</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* City */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="city">
-                    City <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="city">
+                    City <span className="text-rose-500">*</span>
                   </label>
                   <input
                     id="city"
                     type="text"
-                    className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                       errors.city
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     placeholder="e.g. Pune"
                     value={formData.city}
@@ -772,20 +825,20 @@ export default function RegistrationPage({
                     disabled={isReadOnly}
                     maxLength={50}
                   />
-                  {errors.city && <span className="text-xs text-red-600 mt-0.5 block">{errors.city}</span>}
+                  {errors.city && <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.city}</span>}
                 </div>
 
                 {/* State */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="state">
-                    State / UT <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="state">
+                    State / UT <span className="text-rose-500">*</span>
                   </label>
                   <select
                     id="state"
-                    className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                       errors.state
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     value={formData.state}
                     onChange={(e) => handleInputChange('state', e.target.value)}
@@ -798,23 +851,23 @@ export default function RegistrationPage({
                       </option>
                     ))}
                   </select>
-                  {errors.state && <span className="text-xs text-red-600 mt-0.5 block">{errors.state}</span>}
+                  {errors.state && <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.state}</span>}
                 </div>
 
                 {/* Pincode */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="pincode">
-                    Pincode <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="pincode">
+                    Pincode <span className="text-rose-500">*</span>
                   </label>
                   <input
                     id="pincode"
                     type="text"
                     inputMode="numeric"
                     maxLength={6}
-                    className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 font-mono outline-none transition-all ${
                       errors.pincode
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     placeholder="411001"
                     value={formData.pincode}
@@ -822,9 +875,9 @@ export default function RegistrationPage({
                     disabled={isReadOnly}
                   />
                   {errors.pincode ? (
-                    <span className="text-xs text-red-600 mt-0.5 block">{errors.pincode}</span>
+                    <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.pincode}</span>
                   ) : (
-                    <span className="text-[11px] text-slate-400 mt-0.5 block">6 digits; cannot start with 0</span>
+                    <span className="text-[11px] text-slate-400 mt-1 block">6 digits; cannot start with 0</span>
                   )}
                 </div>
               </div>
@@ -832,15 +885,18 @@ export default function RegistrationPage({
           </div>
 
           {/* SECTION 3: EXPERTISE & LANGUAGES */}
-          <div className="border-t border-slate-100 pt-5">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">
-              3. Languages &amp; Areas of Expertise
-            </h3>
+          <div className="border-t border-slate-100 pt-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">3</span>
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                Specializations &amp; Languages
+              </h3>
+            </div>
 
             {/* Languages Known */}
-            <div className="mb-4">
-              <label className="text-xs font-semibold text-slate-600 block mb-2">
-                Languages Known <span className="text-red-500">*</span> (Select at least 1)
+            <div className="mb-5">
+              <label className="text-xs font-semibold text-slate-700 block mb-2.5">
+                Languages Known <span className="text-rose-500">*</span> (Select at least 1)
               </label>
               <div className="flex flex-wrap gap-2">
                 {MANDATORY_LANGUAGES.map((lang) => {
@@ -848,10 +904,10 @@ export default function RegistrationPage({
                   return (
                     <label
                       key={lang}
-                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border ${
+                      className={`inline-flex items-center px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all border ${
                         isChecked
-                          ? 'bg-blue-50 border-blue-600 text-blue-600 font-semibold'
-                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/30'
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
                       <input
@@ -861,19 +917,19 @@ export default function RegistrationPage({
                         disabled={isReadOnly}
                         className="hidden"
                       />
-                      {isChecked && <Check size={13} className="mr-1" />}
+                      {isChecked && <Check size={14} className="mr-1.5" />}
                       {lang}
                     </label>
                   );
                 })}
               </div>
-              {errors.languages && <span className="text-xs text-red-600 mt-1 block">{errors.languages}</span>}
+              {errors.languages && <span className="text-xs text-rose-600 font-medium mt-1.5 block">{errors.languages}</span>}
             </div>
 
             {/* Areas of Expertise */}
             <div>
-              <label className="text-xs font-semibold text-slate-600 block mb-2">
-                Areas of Expertise <span className="text-red-500">*</span> (Choose 1 to 3)
+              <label className="text-xs font-semibold text-slate-700 block mb-2.5">
+                Areas of Expertise <span className="text-rose-500">*</span> (Choose 1 to 3)
               </label>
               <div className="flex flex-wrap gap-2">
                 {AREAS_OF_EXPERTISE.map((area) => {
@@ -881,10 +937,10 @@ export default function RegistrationPage({
                   return (
                     <label
                       key={area}
-                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all border ${
+                      className={`inline-flex items-center px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all border ${
                         isChecked
-                          ? 'bg-blue-50 border-blue-600 text-blue-600 font-semibold'
-                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/30'
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
                       <input
@@ -894,14 +950,14 @@ export default function RegistrationPage({
                         disabled={isReadOnly}
                         className="hidden"
                       />
-                      {isChecked && <Check size={13} className="mr-1" />}
+                      {isChecked && <Check size={14} className="mr-1.5" />}
                       {area}
                     </label>
                   );
                 })}
               </div>
               {errors.areas_of_expertise && (
-                <span className="text-xs text-red-600 mt-1 block">{errors.areas_of_expertise}</span>
+                <span className="text-xs text-rose-600 font-medium mt-1.5 block">{errors.areas_of_expertise}</span>
               )}
             </div>
           </div>
@@ -909,22 +965,27 @@ export default function RegistrationPage({
           {/* SECTION 4: TYPE SPECIFIC DETAILS */}
           {formData.user_type === 'broker' ? (
             /* BROKER ONLY FIELDS (2) */
-            <div className="border-t border-slate-100 pt-5">
-              <h3 className="text-sm font-bold text-slate-900 mb-4">4. Broker Specific Details</h3>
+            <div className="border-t border-slate-100 pt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">4</span>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                  Broker Specific Mandates
+                </h3>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="pan_number_broker">
-                    Personal PAN Number <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="pan_number_broker">
+                    Personal PAN Number <span className="text-rose-500">*</span>
                   </label>
                   <input
                     id="pan_number_broker"
                     type="text"
                     maxLength={10}
-                    className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 font-mono uppercase outline-none transition-all ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 font-mono uppercase outline-none transition-all ${
                       errors.pan_number
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     placeholder="ABCDE1234F"
                     value={formData.pan_number}
@@ -932,25 +993,25 @@ export default function RegistrationPage({
                     disabled={isReadOnly}
                   />
                   {errors.pan_number ? (
-                    <span className="text-xs text-red-600 mt-0.5 block">{errors.pan_number}</span>
+                    <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.pan_number}</span>
                   ) : (
-                    <span className="text-[11px] text-slate-400 mt-0.5 block">
+                    <span className="text-[11px] text-slate-400 mt-1 block">
                       Individual broker: 4th letter must be "P" (e.g. ABCDP1234F)
                     </span>
                   )}
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="about_broker">
-                    About Professional Background <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="about_broker">
+                    About Professional Background <span className="text-rose-500">*</span>
                   </label>
                   <textarea
                     id="about_broker"
                     rows={3}
-                    className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                       errors.about
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     placeholder="Describe your background, real estate deals, and local network..."
                     value={formData.about}
@@ -958,35 +1019,40 @@ export default function RegistrationPage({
                     disabled={isReadOnly}
                     maxLength={500}
                   />
-                  <div className="flex justify-between text-xs mt-0.5">
+                  <div className="flex justify-between text-xs mt-1">
                     {errors.about ? (
-                      <span className="text-red-600">{errors.about}</span>
+                      <span className="text-rose-600 font-medium">{errors.about}</span>
                     ) : (
                       <span className="text-slate-400">50–500 characters</span>
                     )}
-                    <span className="text-slate-400">{formData.about.length}/500</span>
+                    <span className="text-slate-400 font-mono">{formData.about.length}/500</span>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
             /* BUILDER ONLY FIELDS (5) */
-            <div className="border-t border-slate-100 pt-5">
-              <h3 className="text-sm font-bold text-slate-900 mb-4">4. Builder &amp; Company Specific Details</h3>
+            <div className="border-t border-slate-100 pt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">4</span>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                  Builder Entity &amp; Compliance Details
+                </h3>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* Company Name */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="company_name">
-                    Company Name <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="company_name">
+                    Company Name <span className="text-rose-500">*</span>
                   </label>
                   <input
                     id="company_name"
                     type="text"
-                    className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                       errors.company_name
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     placeholder="e.g. Prime Realty Developers Pvt Ltd"
                     value={formData.company_name}
@@ -994,20 +1060,20 @@ export default function RegistrationPage({
                     disabled={isReadOnly}
                     maxLength={100}
                   />
-                  {errors.company_name && <span className="text-xs text-red-600 mt-0.5 block">{errors.company_name}</span>}
+                  {errors.company_name && <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.company_name}</span>}
                 </div>
 
                 {/* Company Type */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="company_type">
-                    Company Type <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="company_type">
+                    Company Type <span className="text-rose-500">*</span>
                   </label>
                   <select
                     id="company_type"
-                    className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                       errors.company_type
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     value={formData.company_type}
                     onChange={(e) => handleInputChange('company_type', e.target.value)}
@@ -1020,22 +1086,22 @@ export default function RegistrationPage({
                       </option>
                     ))}
                   </select>
-                  {errors.company_type && <span className="text-xs text-red-600 mt-0.5 block">{errors.company_type}</span>}
+                  {errors.company_type && <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.company_type}</span>}
                 </div>
 
                 {/* GST Number */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="gst_number">
-                    GST Number <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="gst_number">
+                    GST Number <span className="text-rose-500">*</span>
                   </label>
                   <input
                     id="gst_number"
                     type="text"
                     maxLength={15}
-                    className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 font-mono uppercase outline-none transition-all ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 font-mono uppercase outline-none transition-all ${
                       errors.gst_number
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     placeholder="09AAACP1234F1Z5"
                     value={formData.gst_number}
@@ -1049,25 +1115,25 @@ export default function RegistrationPage({
                     disabled={isReadOnly}
                   />
                   {errors.gst_number ? (
-                    <span className="text-xs text-red-600 mt-0.5 block">{errors.gst_number}</span>
+                    <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.gst_number}</span>
                   ) : (
-                    <span className="text-[11px] text-slate-400 mt-0.5 block">15 chars (e.g. 09AAACP1234F1Z5)</span>
+                    <span className="text-[11px] text-slate-400 mt-1 block">15 chars (e.g. 09AAACP1234F1Z5)</span>
                   )}
                 </div>
 
                 {/* Builder PAN Number */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="pan_number_builder">
-                    Company PAN Number <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="pan_number_builder">
+                    Company PAN Number <span className="text-rose-500">*</span>
                   </label>
                   <input
                     id="pan_number_builder"
                     type="text"
                     maxLength={10}
-                    className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 font-mono uppercase outline-none transition-all ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 font-mono uppercase outline-none transition-all ${
                       errors.pan_number
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     placeholder="AAACP1234F"
                     value={formData.pan_number}
@@ -1075,9 +1141,9 @@ export default function RegistrationPage({
                     disabled={isReadOnly}
                   />
                   {errors.pan_number ? (
-                    <span className="text-xs text-red-600 mt-0.5 block">{errors.pan_number}</span>
+                    <span className="text-xs text-rose-600 font-medium mt-1 block">{errors.pan_number}</span>
                   ) : (
-                    <span className="text-[11px] text-slate-400 mt-0.5 block">
+                    <span className="text-[11px] text-slate-400 mt-1 block">
                       Must equal chars 3–12 of GST. 4th letter: C (Pvt Ltd), F (LLP/Partnership), P (Proprietorship)
                     </span>
                   )}
@@ -1085,16 +1151,16 @@ export default function RegistrationPage({
 
                 {/* About Company */}
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="about_company">
-                    About Company <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="about_company">
+                    About Company <span className="text-rose-500">*</span>
                   </label>
                   <textarea
                     id="about_company"
                     rows={3}
-                    className={`w-full p-2.5 rounded-lg border text-sm text-slate-900 outline-none transition-all ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-900 outline-none transition-all ${
                       errors.about_company
-                        ? 'border-red-500 bg-red-50/30'
-                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                        ? 'border-rose-500 bg-rose-50/20'
+                        : 'border-slate-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white bg-slate-50/40'
                     }`}
                     placeholder="Describe completed projects, total square feet delivered, certifications..."
                     value={formData.about_company}
@@ -1102,13 +1168,13 @@ export default function RegistrationPage({
                     disabled={isReadOnly}
                     maxLength={500}
                   />
-                  <div className="flex justify-between text-xs mt-0.5">
+                  <div className="flex justify-between text-xs mt-1">
                     {errors.about_company ? (
-                      <span className="text-red-600">{errors.about_company}</span>
+                      <span className="text-rose-600 font-medium">{errors.about_company}</span>
                     ) : (
                       <span className="text-slate-400">50–500 characters</span>
                     )}
-                    <span className="text-slate-400">{formData.about_company.length}/500</span>
+                    <span className="text-slate-400 font-mono">{formData.about_company.length}/500</span>
                   </div>
                 </div>
               </div>
@@ -1116,12 +1182,12 @@ export default function RegistrationPage({
           )}
 
           {/* ACTION BUTTONS BAR */}
-          <div className="border-t border-slate-100 pt-5 flex items-center justify-between flex-wrap gap-3">
+          <div className="border-t border-slate-100 pt-6 flex items-center justify-between flex-wrap gap-4">
             <div>
               {formData.id && !isReadOnly && (
                 <button
                   type="button"
-                  className="px-3.5 py-2 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 flex items-center gap-1.5 transition-colors"
+                  className="px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50/50 text-rose-600 text-xs font-bold hover:bg-rose-100 flex items-center gap-1.5 transition-colors"
                   onClick={() => setShowDeleteModal(true)}
                   disabled={deleteLoading || saveLoading || submitLoading}
                 >
@@ -1131,36 +1197,36 @@ export default function RegistrationPage({
               )}
             </div>
 
-            <div className="flex gap-2.5 flex-wrap">
+            <div className="flex gap-3 flex-wrap">
               {!isReadOnly ? (
                 <>
                   <button
                     type="button"
-                    className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-50 flex items-center gap-1.5 transition-colors"
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-xs sm:text-sm font-bold hover:bg-slate-50 hover:border-slate-300 shadow-sm flex items-center gap-2 transition-all"
                     onClick={handleSaveDraft}
                     disabled={saveLoading || submitLoading}
                   >
-                    <Save size={15} />
+                    <Save size={16} />
                     <span>{saveLoading ? 'Saving...' : 'Save Draft (R1)'}</span>
                   </button>
 
                   <button
                     type="button"
-                    className="px-5 py-2 rounded-lg bg-blue-600 text-white text-xs sm:text-sm font-semibold hover:bg-blue-700 flex items-center gap-1.5 transition-colors"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-xs sm:text-sm font-bold hover:from-indigo-700 hover:to-indigo-800 shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all transform active:scale-[0.98]"
                     onClick={handleSubmitRegistration}
                     disabled={saveLoading || submitLoading}
                   >
-                    <Send size={15} />
+                    <Send size={16} />
                     <span>{submitLoading ? 'Submitting...' : 'Submit Registration (R2)'}</span>
                   </button>
                 </>
               ) : (
                 <button
                   type="button"
-                  className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-50 flex items-center gap-1.5 transition-colors"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-xs sm:text-sm font-bold hover:bg-slate-50 shadow-sm flex items-center gap-2 transition-all"
                   onClick={onNavigateBack}
                 >
-                  <ArrowLeft size={15} />
+                  <ArrowLeft size={16} />
                   <span>Return to Reports</span>
                 </button>
               )}

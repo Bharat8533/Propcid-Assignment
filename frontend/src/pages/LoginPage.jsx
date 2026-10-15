@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Building2, Lock, Mail, ArrowRight, Sparkles, ShieldCheck } from 'lucide-react';
 import { DEMO_STAFF_USERS } from '../constants/indianData';
 import { api } from '../services/api';
 
@@ -44,21 +44,28 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-slate-100 to-blue-50">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden bg-slate-950">
+      {/* Ambient background glows */}
+      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="max-w-md w-full bg-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-800 overflow-hidden relative z-10">
         {/* Header */}
-        <div className="bg-slate-900 text-white p-6 sm:p-8 text-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl inline-flex items-center justify-center mb-3 shadow-lg shadow-blue-500/30">
-            <Building2 size={26} className="text-white" />
+        <div className="p-8 pb-6 text-center border-b border-slate-800/80">
+          <div className="w-14 h-14 bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 rounded-2xl inline-flex items-center justify-center mb-4 shadow-glow">
+            <Building2 size={30} className="text-white drop-shadow" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight">EstateDesk Staff Portal</h1>
-          <p className="text-xs text-slate-400 mt-1">Builder &amp; Broker Registration Module</p>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 mb-2">
+            <Sparkles size={11} /> Field Staff Portal
+          </div>
+          <h1 className="text-2xl font-black tracking-tight text-white">Estate<span className="text-indigo-400">Desk</span></h1>
+          <p className="text-xs text-slate-400 mt-1">Builder &amp; Broker Compliance Registration Platform</p>
         </div>
 
         {/* Body */}
-        <div className="p-6 sm:p-8">
+        <div className="p-8 pt-6">
           {errorMessage && (
-            <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg p-3 text-xs font-medium mb-4 flex items-center gap-2">
+            <div className="bg-rose-500/10 text-rose-300 border border-rose-500/30 rounded-xl p-3.5 text-xs font-semibold mb-5 flex items-center gap-2">
               <span>⚠️</span>
               <span>{errorMessage}</span>
             </div>
@@ -66,47 +73,47 @@ export default function LoginPage({ onLoginSuccess }) {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="staff-email">
+              <label className="text-xs font-bold text-slate-300 block mb-1.5" htmlFor="staff-email">
                 Staff Email Address
               </label>
               <div className="relative">
                 <input
                   id="staff-email"
                   type="email"
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-800/80 text-white text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-500"
                   placeholder="name@test.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   required
                 />
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-600 block mb-1" htmlFor="staff-password">
-                Password
+              <label className="text-xs font-bold text-slate-300 block mb-1.5" htmlFor="staff-password">
+                Staff Password
               </label>
               <div className="relative">
                 <input
                   id="staff-password"
                   type="password"
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-800/80 text-white text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-500"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   required
                 />
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold text-sm hover:from-indigo-700 hover:to-indigo-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 disabled:opacity-50 mt-2 transform active:scale-95"
             >
               <span>{loading ? 'Authenticating...' : 'Sign In to Portal'}</span>
               <ArrowRight size={16} />
@@ -114,8 +121,8 @@ export default function LoginPage({ onLoginSuccess }) {
           </form>
 
           {/* Quick Demo Logins for Evaluator */}
-          <div className="mt-8 border-t border-slate-100 pt-6">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">
+          <div className="mt-8 border-t border-slate-800 pt-6">
+            <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-3 text-center">
               ⚡ Quick Test Credentials (One-Click)
             </div>
 
@@ -125,19 +132,24 @@ export default function LoginPage({ onLoginSuccess }) {
                   key={staff.id}
                   type="button"
                   onClick={() => handleQuickLogin(staff)}
-                  className="w-full flex items-center justify-between p-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-white hover:border-blue-400 transition-all text-left"
+                  className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-850/60 hover:bg-slate-800 hover:border-indigo-500/50 transition-all text-left group"
                 >
-                  <div>
-                    <div className="font-semibold text-xs text-slate-800">{staff.name}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">
-                      {staff.email} • {staff.password}
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-xs font-bold transition-colors">
+                      {staff.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs text-slate-200 group-hover:text-white transition-colors">{staff.name}</div>
+                      <div className="text-[11px] text-slate-400 font-mono">
+                        {staff.email} • {staff.password}
+                      </div>
                     </div>
                   </div>
                   <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                       staff.role === 'admin'
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-indigo-100 text-indigo-800'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                     }`}
                   >
                     {staff.role}
