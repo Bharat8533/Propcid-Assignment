@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { DEMO_STAFF_USERS } from '../constants/indianData';
 import { api } from '../services/api';
 
 export default function LoginPage({ onLoginSuccess }) {
@@ -22,21 +21,6 @@ export default function LoginPage({ onLoginSuccess }) {
       onLoginSuccess(data.user, data.token);
     } catch (err) {
       setErrorMessage(err.message || 'Authentication failed. Please verify credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickLogin = async (staff) => {
-    setEmail(staff.email);
-    setPassword(staff.password);
-    try {
-      setLoading(true);
-      setErrorMessage('');
-      const data = await api.login(staff.email, staff.password);
-      onLoginSuccess(data.user, data.token);
-    } catch (err) {
-      setErrorMessage(err.message || 'Quick login failed');
     } finally {
       setLoading(false);
     }
@@ -106,40 +90,6 @@ export default function LoginPage({ onLoginSuccess }) {
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
-
-        {/* One-click Staff Logins */}
-        <div className="mt-6 border-t border-slate-200 pt-5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3 text-center">
-            Demo Staff Accounts
-          </div>
-
-          <div className="space-y-2">
-            {DEMO_STAFF_USERS.map((staff) => (
-              <button
-                key={staff.id}
-                type="button"
-                onClick={() => handleQuickLogin(staff)}
-                className="w-full flex items-center justify-between p-2.5 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 transition-colors text-left"
-              >
-                <div>
-                  <div className="text-xs font-semibold text-slate-800">{staff.name}</div>
-                  <div className="text-[11px] text-slate-500 font-mono">
-                    {staff.email} • {staff.password}
-                  </div>
-                </div>
-                <span
-                  className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
-                    staff.role === 'admin'
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-blue-100 text-blue-800'
-                  }`}
-                >
-                  {staff.role}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );
