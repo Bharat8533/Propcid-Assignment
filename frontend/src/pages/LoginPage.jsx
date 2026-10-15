@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Building2, Lock, Mail, ArrowRight, Sparkles, ShieldCheck } from 'lucide-react';
 import { DEMO_STAFF_USERS } from '../constants/indianData';
 import { api } from '../services/api';
 
@@ -44,119 +43,101 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden bg-slate-950">
-      {/* Ambient background glows */}
-      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="max-w-md w-full bg-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-800 overflow-hidden relative z-10">
-        {/* Header */}
-        <div className="p-8 pb-6 text-center border-b border-slate-800/80">
-          <div className="w-14 h-14 bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 rounded-2xl inline-flex items-center justify-center mb-4 shadow-glow">
-            <Building2 size={30} className="text-white drop-shadow" />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
+      <div className="max-w-md w-full bg-white rounded-lg border border-slate-200 shadow-sm p-6 sm:p-8">
+        {/* Brand Header */}
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="w-9 h-9 bg-slate-900 text-white flex items-center justify-center rounded font-bold text-sm">
+              ED
+            </div>
+            <span className="font-bold text-slate-900 text-xl tracking-tight">EstateDesk</span>
           </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 mb-2">
-            <Sparkles size={11} /> Field Staff Portal
-          </div>
-          <h1 className="text-2xl font-black tracking-tight text-white">Estate<span className="text-indigo-400">Desk</span></h1>
-          <p className="text-xs text-slate-400 mt-1">Builder &amp; Broker Compliance Registration Platform</p>
+          <h1 className="text-lg font-bold text-slate-900">Staff Portal Sign In</h1>
+          <p className="text-xs text-slate-500 mt-1">Builder &amp; Broker Compliance Registration Platform</p>
         </div>
 
-        {/* Body */}
-        <div className="p-8 pt-6">
-          {errorMessage && (
-            <div className="bg-rose-500/10 text-rose-300 border border-rose-500/30 rounded-xl p-3.5 text-xs font-semibold mb-5 flex items-center gap-2">
-              <span>⚠️</span>
-              <span>{errorMessage}</span>
-            </div>
-          )}
+        {/* Error Alert */}
+        {errorMessage && (
+          <div className="bg-red-50 text-red-700 border border-red-200 rounded-md p-3 text-xs font-medium mb-4">
+            {errorMessage}
+          </div>
+        )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-slate-300 block mb-1.5" htmlFor="staff-email">
-                Staff Email Address
-              </label>
-              <div className="relative">
-                <input
-                  id="staff-email"
-                  type="email"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-800/80 text-white text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-500"
-                  placeholder="name@test.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  required
-                />
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              </div>
-            </div>
+        {/* Login Form */}
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="staff-email">
+              Email Address
+            </label>
+            <input
+              id="staff-email"
+              type="email"
+              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-colors"
+              placeholder="name@test.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
+          </div>
 
-            <div>
-              <label className="text-xs font-bold text-slate-300 block mb-1.5" htmlFor="staff-password">
-                Staff Password
-              </label>
-              <div className="relative">
-                <input
-                  id="staff-password"
-                  type="password"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-800/80 text-white text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-500"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  required
-                />
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              </div>
-            </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="staff-password">
+              Password
+            </label>
+            <input
+              id="staff-password"
+              type="password"
+              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-colors"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold text-sm hover:from-indigo-700 hover:to-indigo-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 disabled:opacity-50 mt-2 transform active:scale-95"
-            >
-              <span>{loading ? 'Authenticating...' : 'Sign In to Portal'}</span>
-              <ArrowRight size={16} />
-            </button>
-          </form>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 px-4 rounded-md bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 mt-2"
+          >
+            {loading ? 'Authenticating...' : 'Sign In'}
+          </button>
+        </form>
 
-          {/* Quick Demo Logins for Evaluator */}
-          <div className="mt-8 border-t border-slate-800 pt-6">
-            <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-3 text-center">
-              ⚡ Quick Test Credentials (One-Click)
-            </div>
+        {/* One-click Staff Logins */}
+        <div className="mt-6 border-t border-slate-200 pt-5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-3 text-center">
+            Demo Staff Accounts
+          </div>
 
-            <div className="space-y-2">
-              {DEMO_STAFF_USERS.map((staff) => (
-                <button
-                  key={staff.id}
-                  type="button"
-                  onClick={() => handleQuickLogin(staff)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-850/60 hover:bg-slate-800 hover:border-indigo-500/50 transition-all text-left group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-xs font-bold transition-colors">
-                      {staff.name.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs text-slate-200 group-hover:text-white transition-colors">{staff.name}</div>
-                      <div className="text-[11px] text-slate-400 font-mono">
-                        {staff.email} • {staff.password}
-                      </div>
-                    </div>
+          <div className="space-y-2">
+            {DEMO_STAFF_USERS.map((staff) => (
+              <button
+                key={staff.id}
+                type="button"
+                onClick={() => handleQuickLogin(staff)}
+                className="w-full flex items-center justify-between p-2.5 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 transition-colors text-left"
+              >
+                <div>
+                  <div className="text-xs font-semibold text-slate-800">{staff.name}</div>
+                  <div className="text-[11px] text-slate-500 font-mono">
+                    {staff.email} • {staff.password}
                   </div>
-                  <span
-                    className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                      staff.role === 'admin'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                    }`}
-                  >
-                    {staff.role}
-                  </span>
-                </button>
-              ))}
-            </div>
+                </div>
+                <span
+                  className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                    staff.role === 'admin'
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-blue-100 text-blue-800'
+                  }`}
+                >
+                  {staff.role}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
