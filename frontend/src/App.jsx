@@ -9,15 +9,15 @@ import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('estatedesk_user');
-    if (saved) {
+    const token = localStorage.getItem('estatedesk_token');
+    if (saved && token) {
       try {
         return JSON.parse(saved);
       } catch (e) {
         return null;
       }
     }
-    // Default logged in as Vikram Agent for immediate interactive evaluation
-    return DEMO_STAFF_USERS[1];
+    return null;
   });
 
   const [activeTab, setActiveTab] = useState(() => {
@@ -62,14 +62,20 @@ export default function App() {
     setSelectedRegistrationId(null);
   };
 
-  const handleSwitchUser = (user) => {
-    setCurrentUser(user);
-    localStorage.setItem('estatedesk_user', JSON.stringify(user));
-    if (user.role === 'admin') {
-      setActiveTab('report');
+  const handleSwitchUser = async (user) => {
+    try {
+      const data = await api.login(user.email, user.password);
+      setCurrentUser(data.user);
+      localStorage.setItem('estatedesk_user', JSON.stringify(data.user));
+      localStorage.setItem('estatedesk_token', data.token);
+      if (data.user.role === 'admin') {
+        setActiveTab('report');
+      }
+      setSelectedRegistrationId(null);
+      showToast(`Switched account to ${data.user.name} (${data.user.role.toUpperCase()})`, 'info');
+    } catch (err) {
+      showToast(err.message || 'Failed to switch user', 'error');
     }
-    setSelectedRegistrationId(null);
-    showToast(`Switched account to ${user.name} (${user.role.toUpperCase()})`, 'info');
   };
 
   const handleNavigateToForm = () => {
