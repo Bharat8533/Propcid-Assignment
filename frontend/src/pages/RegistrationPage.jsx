@@ -47,6 +47,32 @@ const INITIAL_FORM = {
   completion: 0
 };
 
+function cleanRecord(data) {
+  if (!data) return INITIAL_FORM;
+  return {
+    ...INITIAL_FORM,
+    ...data,
+    full_name: data.full_name || '',
+    email: data.email || '',
+    mobile: data.mobile || '',
+    gender: data.gender || '',
+    dob: data.dob ? (typeof data.dob === 'string' ? data.dob.slice(0, 10) : '') : '',
+    office_address: data.office_address || '',
+    city: data.city || '',
+    state: data.state || '',
+    pincode: data.pincode || '',
+    experience_years: data.experience_years !== null && data.experience_years !== undefined ? data.experience_years : '',
+    languages: Array.isArray(data.languages) ? data.languages : [],
+    areas_of_expertise: Array.isArray(data.areas_of_expertise) ? data.areas_of_expertise : [],
+    pan_number: data.pan_number || '',
+    about: data.about || '',
+    company_name: data.company_name || '',
+    company_type: data.company_type || '',
+    gst_number: data.gst_number || '',
+    about_company: data.about_company || ''
+  };
+}
+
 export default function RegistrationPage({
   currentUser,
   registrationId,
@@ -82,12 +108,7 @@ export default function RegistrationPage({
       try {
         setLoading(true);
         const record = await api.getRegistration(registrationId);
-        setFormData({
-          ...INITIAL_FORM,
-          ...record,
-          languages: record.languages || [],
-          areas_of_expertise: record.areas_of_expertise || []
-        });
+        setFormData(cleanRecord(record));
         setIsDirty(false);
       } catch (err) {
         showToast(err.message, 'error');
@@ -245,11 +266,9 @@ export default function RegistrationPage({
         showToast('Draft created successfully', 'success');
       }
 
-      setFormData((prev) => ({
+      setFormData((prev) => cleanRecord({
         ...prev,
-        ...savedRecord,
-        languages: savedRecord.languages || [],
-        areas_of_expertise: savedRecord.areas_of_expertise || []
+        ...savedRecord
       }));
       setIsDirty(false);
     } catch (err) {
@@ -273,7 +292,7 @@ export default function RegistrationPage({
         setSubmitLoading(true);
         const saved = await api.createDraft(formData);
         currentId = saved.id;
-        setFormData((prev) => ({ ...prev, ...saved }));
+        setFormData((prev) => cleanRecord({ ...prev, ...saved }));
       } catch (err) {
         setSubmitLoading(false);
         if (err.fields) setErrors(err.fields);
@@ -294,7 +313,7 @@ export default function RegistrationPage({
       setSubmitLoading(true);
       setErrors({});
       const updated = await api.submitRegistration(currentId);
-      setFormData((prev) => ({
+      setFormData((prev) => cleanRecord({
         ...prev,
         ...updated,
         status: 'submitted',
@@ -338,11 +357,11 @@ export default function RegistrationPage({
         // Create draft in PostgreSQL database
         const created = await api.createDraft(formData);
         regId = created.id;
-        setFormData((prev) => ({ ...prev, ...created, id: created.id }));
+        setFormData((prev) => cleanRecord({ ...prev, ...created, id: created.id }));
       } else {
         // Sync latest values to PostgreSQL database before sending OTP
         const updated = await api.updateDraft(regId, formData);
-        setFormData((prev) => ({ ...prev, ...updated, id: regId }));
+        setFormData((prev) => cleanRecord({ ...prev, ...updated, id: regId }));
       }
     } catch (e) {
       setLoading(false);
@@ -368,9 +387,9 @@ export default function RegistrationPage({
 
   const handleOtpSuccess = (channel, updatedReg) => {
     if (updatedReg) {
-      setFormData((prev) => ({ ...prev, ...updatedReg }));
+      setFormData((prev) => cleanRecord({ ...prev, ...updatedReg }));
     } else {
-      setFormData((prev) => ({
+      setFormData((prev) => cleanRecord({
         ...prev,
         [channel === 'email' ? 'email_verified' : 'mobile_verified']: true
       }));
@@ -741,7 +760,7 @@ export default function RegistrationPage({
                       : 'border-slate-300 focus:border-slate-800'
                   }`}
                   placeholder="Street address, building, suite..."
-                  value={formData.office_address}
+                  value={formData.office_address || ''}
                   onChange={(e) => handleInputChange('office_address', e.target.value)}
                   disabled={isReadOnly}
                   maxLength={200}
@@ -752,7 +771,7 @@ export default function RegistrationPage({
                   ) : (
                     <span>10–200 characters</span>
                   )}
-                  <span>{formData.office_address.length}/200</span>
+                  <span>{(formData.office_address || '').length}/200</span>
                 </div>
               </div>
 
@@ -848,7 +867,7 @@ export default function RegistrationPage({
               </label>
               <div className="flex flex-wrap gap-2">
                 {MANDATORY_LANGUAGES.map((lang) => {
-                  const isChecked = formData.languages.includes(lang);
+                  const isChecked = (formData.languages || []).includes(lang);
                   return (
                     <label
                       key={lang}
@@ -880,7 +899,7 @@ export default function RegistrationPage({
               </label>
               <div className="flex flex-wrap gap-2">
                 {AREAS_OF_EXPERTISE.map((area) => {
-                  const isChecked = formData.areas_of_expertise.includes(area);
+                  const isChecked = (formData.areas_of_expertise || []).includes(area);
                   return (
                     <label
                       key={area}
@@ -957,7 +976,7 @@ export default function RegistrationPage({
                         : 'border-slate-300 focus:border-slate-800'
                     }`}
                     placeholder="Brief background and network details..."
-                    value={formData.about}
+                    value={formData.about || ''}
                     onChange={(e) => handleInputChange('about', e.target.value)}
                     disabled={isReadOnly}
                     maxLength={500}
@@ -968,7 +987,7 @@ export default function RegistrationPage({
                     ) : (
                       <span>50–500 characters</span>
                     )}
-                    <span>{formData.about.length}/500</span>
+                    <span>{(formData.about || '').length}/500</span>
                   </div>
                 </div>
               </div>
@@ -1103,7 +1122,7 @@ export default function RegistrationPage({
                         : 'border-slate-300 focus:border-slate-800'
                     }`}
                     placeholder="Describe completed projects, certifications..."
-                    value={formData.about_company}
+                    value={formData.about_company || ''}
                     onChange={(e) => handleInputChange('about_company', e.target.value)}
                     disabled={isReadOnly}
                     maxLength={500}
@@ -1114,7 +1133,7 @@ export default function RegistrationPage({
                     ) : (
                       <span>50–500 characters</span>
                     )}
-                    <span>{formData.about_company.length}/500</span>
+                    <span>{(formData.about_company || '').length}/500</span>
                   </div>
                 </div>
               </div>
