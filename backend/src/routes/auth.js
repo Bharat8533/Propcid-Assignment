@@ -7,7 +7,6 @@ import { authenticate } from '../middleware/auth.js';
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-estatedesk-jwt-key-2026';
 
-// POST /auth/login
 router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -58,7 +57,6 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
-// GET /auth/me
 router.get('/me', authenticate, async (req, res, next) => {
   try {
     const staff = await repo.findStaffById(req.user.id);
@@ -76,7 +74,6 @@ router.get('/me', authenticate, async (req, res, next) => {
   }
 });
 
-// GET /auth/staff (List agents for dropdowns/filters)
 router.get('/staff', authenticate, async (req, res, next) => {
   try {
     const staffList = await repo.getAllStaff();

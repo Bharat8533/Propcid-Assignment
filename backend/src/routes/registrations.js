@@ -11,18 +11,13 @@ import {
 
 const router = Router();
 
-// All registration routes require staff authentication
 router.use(authenticate);
 
-// -------------------------------------------------------------
-// GET /registrations - List with filters & pagination
-// -------------------------------------------------------------
 router.get('/', async (req, res, next) => {
   try {
-    const { q, status, type, from, to, page, limit } = req.query;
+    const { q, status, type, from, to, page, limit, scope } = req.query;
     let agentId = req.query.agentId;
 
-    // Rule R6: Agents can only view their own registrations
     if (req.user.role === 'agent') {
       agentId = req.user.id;
     }
@@ -44,14 +39,10 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// -------------------------------------------------------------
-// POST /registrations - Create draft (Agent only)
-// -------------------------------------------------------------
 router.post('/', requireAgent, async (req, res, next) => {
   try {
     const formData = req.body || {};
 
-    // Rule R1: Draft validation (user_type + [name OR mobile])
     const { isValid, errors } = validateDraft(formData);
     if (!isValid) {
       return res.status(400).json({
@@ -63,7 +54,6 @@ router.post('/', requireAgent, async (req, res, next) => {
       });
     }
 
-    // Rule R5: Duplicate prevention across active records
     if (formData.mobile) {
       const dupMobile = await repo.findActiveByMobile(formData.mobile);
       if (dupMobile) {
@@ -88,7 +78,6 @@ router.post('/', requireAgent, async (req, res, next) => {
       }
     }
 
-    // Rule R7: Completion percentage
     const completion = calculateCompletion(formData);
 
     const created = await repo.createRegistration({
@@ -106,9 +95,6 @@ router.post('/', requireAgent, async (req, res, next) => {
   }
 });
 
-// -------------------------------------------------------------
-// GET /registrations/:id - Fetch single registration
-// -------------------------------------------------------------
 router.get('/:id', async (req, res, next) => {
   try {
     const reg = await repo.findRegistrationById(req.params.id);
@@ -121,7 +107,6 @@ router.get('/:id', async (req, res, next) => {
       });
     }
 
-    // Rule R6: Agent can only view own registration
     if (req.user.role === 'agent' && reg.agent_id !== req.user.id) {
       return res.status(403).json({
         error: {
@@ -142,9 +127,6 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// -------------------------------------------------------------
-// PUT/PATCH /registrations/:id - Update draft (Agent only)
-// -------------------------------------------------------------
 const handleUpdate = async (req, res, next) => {
   try {
     const reg = await repo.findRegistrationById(req.params.id);
@@ -157,7 +139,6 @@ const handleUpdate = async (req, res, next) => {
       });
     }
 
-    // Rule R6: Ownership
     if (reg.agent_id !== req.user.id) {
       return res.status(403).json({
         error: {
@@ -167,7 +148,6 @@ const handleUpdate = async (req, res, next) => {
       });
     }
 
-    // Rule R2: Submitted record is read-only
     if (reg.status === 'submitted') {
       return res.status(400).json({
         error: {
@@ -179,7 +159,6 @@ const handleUpdate = async (req, res, next) => {
 
     const updates = req.body || {};
 
-    // Rule R4: Verification follows value
     let email_verified = reg.email_verified;
     if (updates.email !== undefined) {
       const oldEmail = String(reg.email || '').trim().toLowerCase();
@@ -205,7 +184,6 @@ const handleUpdate = async (req, res, next) => {
       mobile_verified
     };
 
-    // Rule R1: Draft validation
     const { isValid, errors } = validateDraft(merged);
     if (!isValid) {
       return res.status(400).json({
@@ -217,7 +195,6 @@ const handleUpdate = async (req, res, next) => {
       });
     }
 
-    // Rule R5: Duplicate check across other active records
     if (merged.mobile) {
       const dupMobile = await repo.findActiveByMobile(merged.mobile, reg.id);
       if (dupMobile) {
@@ -242,7 +219,6 @@ const handleUpdate = async (req, res, next) => {
       }
     }
 
-    // Rule R7: Recalculate completion
     merged.completion = calculateCompletion(merged);
 
     const updated = await repo.updateRegistration(reg.id, merged);
@@ -255,9 +231,6 @@ const handleUpdate = async (req, res, next) => {
 router.put('/:id', requireAgent, handleUpdate);
 router.patch('/:id', requireAgent, handleUpdate);
 
-// -------------------------------------------------------------
-// DELETE /registrations/:id - Soft delete (R6, R10)
-// -------------------------------------------------------------
 router.delete('/:id', async (req, res, next) => {
   try {
     const reg = await repo.findRegistrationById(req.params.id);
@@ -273,7 +246,6 @@ router.delete('/:id', async (req, res, next) => {
     let deleteReason = req.body?.reason ? String(req.body.reason).trim() : null;
 
     if (req.user.role === 'agent') {
-      // Rule R6: Agents can only delete their own drafts
       if (reg.agent_id !== req.user.id) {
         return res.status(403).json({
           error: {
@@ -291,7 +263,6 @@ router.delete('/:id', async (req, res, next) => {
         });
       }
     } else if (req.user.role === 'admin') {
-      // Rule R10: Admin deletion requires a 10-200 character reason
       if (!deleteReason || deleteReason.length < 10 || deleteReason.length > 200) {
         return res.status(400).json({
           error: {
@@ -312,9 +283,6 @@ router.delete('/:id', async (req, res, next) => {
   }
 });
 
-// -------------------------------------------------------------
-// POST /registrations/:id/otp/send - Send dummy OTP (R3)
-// -------------------------------------------------------------
 router.post('/:id/otp/send', requireAgent, async (req, res, next) => {
   try {
     const reg = await repo.findRegistrationById(req.params.id);
@@ -365,7 +333,6 @@ router.post('/:id/otp/send', requireAgent, async (req, res, next) => {
       });
     }
 
-    // Cooldown check (30 seconds)
     const existingOtp = await repo.findOtp(reg.id, channel);
     if (existingOtp && new Date() < new Date(existingOtp.resend_after)) {
       const waitSeconds = Math.ceil((new Date(existingOtp.resend_after) - new Date()) / 1000);
@@ -377,14 +344,12 @@ router.post('/:id/otp/send', requireAgent, async (req, res, next) => {
       });
     }
 
-    // Rule R3: Fixed dummy OTP '123456', 5-min expiry, 30s resend cooldown
     const code = '123456';
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
     const resendAfter = new Date(Date.now() + 30 * 1000).toISOString();
 
     await repo.upsertOtp(reg.id, channel, targetValue, code, expiresAt, resendAfter);
 
-    // Rule R3: Console logged only, NEVER returned in response
     console.log(`[OTP] Generated dummy OTP "${code}" for ${channel}: ${targetValue} (Reg ID: ${reg.id})`);
 
     return res.json({
@@ -399,9 +364,6 @@ router.post('/:id/otp/send', requireAgent, async (req, res, next) => {
   }
 });
 
-// -------------------------------------------------------------
-// POST /registrations/:id/otp/verify - Verify OTP (R3)
-// -------------------------------------------------------------
 router.post('/:id/otp/verify', requireAgent, async (req, res, next) => {
   try {
     const reg = await repo.findRegistrationById(req.params.id);
@@ -443,7 +405,6 @@ router.post('/:id/otp/verify', requireAgent, async (req, res, next) => {
       });
     }
 
-    // Check expiry (5 min)
     if (new Date() > new Date(otp.expires_at)) {
       return res.status(400).json({
         error: {
@@ -453,7 +414,6 @@ router.post('/:id/otp/verify', requireAgent, async (req, res, next) => {
       });
     }
 
-    // Check attempt limit (3 attempts max)
     if (otp.attempts_left <= 0) {
       return res.status(400).json({
         error: {
@@ -463,7 +423,6 @@ router.post('/:id/otp/verify', requireAgent, async (req, res, next) => {
       });
     }
 
-    // Validate code
     if (String(code || '').trim() !== String(otp.code).trim()) {
       const remaining = otp.attempts_left - 1;
       await repo.updateOtpAttempts(otp.id, remaining);
@@ -479,7 +438,6 @@ router.post('/:id/otp/verify', requireAgent, async (req, res, next) => {
       });
     }
 
-    // Success: Delete OTP and mark verified
     await repo.deleteOtp(reg.id, channel);
 
     const updatePayload = {
@@ -500,9 +458,6 @@ router.post('/:id/otp/verify', requireAgent, async (req, res, next) => {
   }
 });
 
-// -------------------------------------------------------------
-// POST /registrations/:id/submit - Final submit (R2)
-// -------------------------------------------------------------
 router.post('/:id/submit', requireAgent, async (req, res, next) => {
   try {
     const reg = await repo.findRegistrationById(req.params.id);
@@ -533,8 +488,17 @@ router.post('/:id/submit', requireAgent, async (req, res, next) => {
       });
     }
 
-    // Rule R2: All mandatory fields valid + both email and mobile verified
-    const { isValid, errors } = validateSubmit(reg);
+    let target = { ...reg };
+    if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+      target = {
+        ...reg,
+        ...req.body,
+        email_verified: reg.email_verified,
+        mobile_verified: reg.mobile_verified
+      };
+    }
+
+    const { isValid, errors } = validateSubmit(target);
     if (!isValid) {
       return res.status(400).json({
         error: {
@@ -546,7 +510,7 @@ router.post('/:id/submit', requireAgent, async (req, res, next) => {
     }
 
     const updated = await repo.updateRegistration(reg.id, {
-      ...reg,
+      ...target,
       status: 'submitted',
       completion: 100
     });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, ShieldCheck, RefreshCw, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -8,12 +8,16 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
   const [resending, setResending] = useState(false);
   const [error, setError] = useState('');
   const [resendCooldown, setResendCooldown] = useState(30);
+  const hasSentRef = useRef(false);
 
   useEffect(() => {
     if (!registrationId) {
       setError('Registration record not saved yet. Please save draft first.');
       return;
     }
+    if (hasSentRef.current) return;
+    hasSentRef.current = true;
+
     const triggerSend = async () => {
       try {
         setLoading(true);
@@ -97,9 +101,8 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
               <strong className="text-slate-900 break-all">{targetValue}</strong>
             </p>
 
-            {/* Test hint banner */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 mb-4">
-              💡 <strong>Evaluation Note (R3):</strong> Dummy OTP test code is <code className="font-bold font-mono">123456</code>.
+              Dummy OTP test code is <code className="font-bold font-mono">123456</code>.
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -130,7 +133,6 @@ export default function OtpModal({ registrationId, channel, targetValue, onClose
               )}
             </div>
 
-            {/* Resend & Attempts status */}
             <div className="mt-4 flex justify-between items-center text-xs">
               <span className="text-slate-400">Valid for 5 mins • 3 attempts max</span>
               <button

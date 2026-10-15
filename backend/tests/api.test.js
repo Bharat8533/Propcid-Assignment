@@ -22,7 +22,6 @@ test.before(async () => {
     });
   });
 
-  // Login Vikram (Agent)
   const resAgent = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -32,7 +31,6 @@ test.before(async () => {
   agentToken = dataAgent.token;
   agentUser = dataAgent.user;
 
-  // Login Asha (Admin)
   const resAdmin = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -42,7 +40,6 @@ test.before(async () => {
   adminToken = dataAdmin.token;
   adminUser = dataAdmin.user;
 
-  // Login Meera (Agent 2)
   const resAgent2 = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -64,7 +61,6 @@ test('1. Authentication Verification', async () => {
   assert.equal(agentUser.role, 'agent');
   assert.equal(adminUser.role, 'admin');
 
-  // Verify wrong password fails
   const badLogin = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -74,7 +70,6 @@ test('1. Authentication Verification', async () => {
 });
 
 test('2. Rule R1: Draft Validation & Rule R6: Role Guards', async () => {
-  // Admin cannot create draft (R6)
   const adminDraft = await fetch(`${baseUrl}/registrations`, {
     method: 'POST',
     headers: {
@@ -85,7 +80,6 @@ test('2. Rule R1: Draft Validation & Rule R6: Role Guards', async () => {
   });
   assert.equal(adminDraft.status, 403);
 
-  // Draft missing name AND mobile fails (R1)
   const emptyDraft = await fetch(`${baseUrl}/registrations`, {
     method: 'POST',
     headers: {
@@ -99,7 +93,6 @@ test('2. Rule R1: Draft Validation & Rule R6: Role Guards', async () => {
   assert.ok(emptyData.error.fields.full_name);
   assert.ok(emptyData.error.fields.mobile);
 
-  // PAN 4th letter validation check for Broker
   const invalidPanRes = await fetch(`${baseUrl}/registrations`, {
     method: 'POST',
     headers: {
@@ -110,12 +103,11 @@ test('2. Rule R1: Draft Validation & Rule R6: Role Guards', async () => {
       user_type: 'broker',
       full_name: 'Rajesh Sharma',
       mobile: '9876543210',
-      pan_number: 'ABCDE1234F' // 4th char is not P
+      pan_number: 'ABCDE1234F'
     })
   });
   assert.equal(invalidPanRes.status, 400);
 
-  // Create valid draft
   const validRes = await fetch(`${baseUrl}/registrations`, {
     method: 'POST',
     headers: {
@@ -154,7 +146,6 @@ test('2. Rule R1: Draft Validation & Rule R6: Role Guards', async () => {
 });
 
 test('3. Rule R5: Duplicate Protection across active records', async () => {
-  // Mobile duplicate check
   const dupMobileRes = await fetch(`${baseUrl}/registrations`, {
     method: 'POST',
     headers: {
@@ -164,7 +155,7 @@ test('3. Rule R5: Duplicate Protection across active records', async () => {
     body: JSON.stringify({
       user_type: 'broker',
       full_name: 'Another Broker',
-      mobile: '+91 98765 43210' // Normalised duplicate
+      mobile: '+91 98765 43210'
     })
   });
   assert.equal(dupMobileRes.status, 409);
@@ -172,7 +163,6 @@ test('3. Rule R5: Duplicate Protection across active records', async () => {
   assert.equal(dupMobileData.error.code, 'DUPLICATE_MOBILE');
   assert.ok(dupMobileData.error.message.includes('Vikram'));
 
-  // Email duplicate check
   const dupEmailRes = await fetch(`${baseUrl}/registrations`, {
     method: 'POST',
     headers: {
@@ -182,7 +172,7 @@ test('3. Rule R5: Duplicate Protection across active records', async () => {
     body: JSON.stringify({
       user_type: 'broker',
       full_name: 'Duplicate Email Person',
-      email: 'RAJESH@sharmarealty.in' // Case-insensitive duplicate
+      email: 'RAJESH@sharmarealty.in'
     })
   });
   assert.equal(dupEmailRes.status, 409);
@@ -191,13 +181,11 @@ test('3. Rule R5: Duplicate Protection across active records', async () => {
 });
 
 test('4. Rule R6: Ownership Isolation', async () => {
-  // Agent 2 cannot view Agent 1's draft
   const getRes = await fetch(`${baseUrl}/registrations/${createdDraftId}`, {
     headers: { Authorization: `Bearer ${agent2Token}` }
   });
   assert.equal(getRes.status, 403);
 
-  // Agent 2 cannot edit Agent 1's draft
   const putRes = await fetch(`${baseUrl}/registrations/${createdDraftId}`, {
     method: 'PUT',
     headers: {
@@ -208,7 +196,6 @@ test('4. Rule R6: Ownership Isolation', async () => {
   });
   assert.equal(putRes.status, 403);
 
-  // Admin CAN view draft
   const adminViewRes = await fetch(`${baseUrl}/registrations/${createdDraftId}`, {
     headers: { Authorization: `Bearer ${adminToken}` }
   });
@@ -216,7 +203,6 @@ test('4. Rule R6: Ownership Isolation', async () => {
 });
 
 test('5. Rule R3 & R4: Dummy OTP & Revocation on Value Change', async () => {
-  // Send OTP
   const sendRes = await fetch(`${baseUrl}/registrations/${createdDraftId}/otp/send`, {
     method: 'POST',
     headers: {
@@ -230,9 +216,8 @@ test('5. Rule R3 & R4: Dummy OTP & Revocation on Value Change', async () => {
   assert.equal(sendData.success, true);
   assert.ok(sendData.expiresAt);
   assert.ok(sendData.resendAfter);
-  assert.equal(sendData.code, undefined); // Code must NOT be returned
+  assert.equal(sendData.code, undefined);
 
-  // Cooldown active
   const cooldownRes = await fetch(`${baseUrl}/registrations/${createdDraftId}/otp/send`, {
     method: 'POST',
     headers: {
@@ -243,7 +228,6 @@ test('5. Rule R3 & R4: Dummy OTP & Revocation on Value Change', async () => {
   });
   assert.equal(cooldownRes.status, 429);
 
-  // Wrong OTP decreases attempts
   const wrongRes = await fetch(`${baseUrl}/registrations/${createdDraftId}/otp/verify`, {
     method: 'POST',
     headers: {
@@ -256,7 +240,6 @@ test('5. Rule R3 & R4: Dummy OTP & Revocation on Value Change', async () => {
   const wrongData = await wrongRes.json();
   assert.equal(wrongData.attemptsLeft, 2);
 
-  // Valid OTP 123456 verifies email
   const verifyEmailRes = await fetch(`${baseUrl}/registrations/${createdDraftId}/otp/verify`, {
     method: 'POST',
     headers: {
@@ -269,7 +252,6 @@ test('5. Rule R3 & R4: Dummy OTP & Revocation on Value Change', async () => {
   const verifyEmailData = await verifyEmailRes.json();
   assert.equal(verifyEmailData.registration.email_verified, true);
 
-  // Rule R4: Changing email revokes verification
   const changeEmailRes = await fetch(`${baseUrl}/registrations/${createdDraftId}`, {
     method: 'PUT',
     headers: {
@@ -282,7 +264,6 @@ test('5. Rule R3 & R4: Dummy OTP & Revocation on Value Change', async () => {
   const changeEmailData = await changeEmailRes.json();
   assert.equal(changeEmailData.registration.email_verified, false);
 
-  // Now verify both email and mobile so we can test submission
   await fetch(`${baseUrl}/registrations/${createdDraftId}/otp/send`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${agentToken}` },
@@ -307,7 +288,6 @@ test('5. Rule R3 & R4: Dummy OTP & Revocation on Value Change', async () => {
 });
 
 test('6. Rule R2: Final Submission & Read-Only Lock', async () => {
-  // Final submission succeeds when all fields & OTPs are verified
   const submitRes = await fetch(`${baseUrl}/registrations/${createdDraftId}/submit`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${agentToken}` }
@@ -321,7 +301,6 @@ test('6. Rule R2: Final Submission & Read-Only Lock', async () => {
   assert.equal(submitData.registration.status, 'submitted');
   assert.equal(submitData.registration.completion, 100);
 
-  // Submitted record is read-only (R2)
   const putLockedRes = await fetch(`${baseUrl}/registrations/${createdDraftId}`, {
     method: 'PUT',
     headers: {
@@ -336,7 +315,6 @@ test('6. Rule R2: Final Submission & Read-Only Lock', async () => {
 });
 
 test('7. Rule R10: Admin Soft Delete with Reason', async () => {
-  // Admin delete without reason (< 10 chars) fails
   const badDeleteRes = await fetch(`${baseUrl}/registrations/${createdDraftId}`, {
     method: 'DELETE',
     headers: {
@@ -347,7 +325,6 @@ test('7. Rule R10: Admin Soft Delete with Reason', async () => {
   });
   assert.equal(badDeleteRes.status, 400);
 
-  // Admin soft delete with 10-200 char reason succeeds
   const goodDeleteRes = await fetch(`${baseUrl}/registrations/${createdDraftId}`, {
     method: 'DELETE',
     headers: {
@@ -358,7 +335,6 @@ test('7. Rule R10: Admin Soft Delete with Reason', async () => {
   });
   assert.equal(goodDeleteRes.status, 200);
 
-  // Fetching deleted record returns 404
   const getDeletedRes = await fetch(`${baseUrl}/registrations/${createdDraftId}`, {
     headers: { Authorization: `Bearer ${adminToken}` }
   });
@@ -366,13 +342,11 @@ test('7. Rule R10: Admin Soft Delete with Reason', async () => {
 });
 
 test('8. Reports Summary', async () => {
-  // Agent forbidden
   const agentRepRes = await fetch(`${baseUrl}/reports/summary`, {
     headers: { Authorization: `Bearer ${agentToken}` }
   });
   assert.equal(agentRepRes.status, 403);
 
-  // Admin allowed
   const adminRepRes = await fetch(`${baseUrl}/reports/summary`, {
     headers: { Authorization: `Bearer ${adminToken}` }
   });

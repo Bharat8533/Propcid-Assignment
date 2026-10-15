@@ -7,10 +7,7 @@ async function startServer() {
   await initDb();
 
   const server = app.listen(PORT, () => {
-    console.log(`===============================================`);
-    console.log(`  EstateDesk Backend API listening on port ${PORT}`);
-    console.log(`  Health Check: http://localhost:${PORT}/health`);
-    console.log(`===============================================`);
+    console.log(`Server is running on port ${PORT}`);
   });
 
   const shutdown = () => {

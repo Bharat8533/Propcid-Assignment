@@ -4,11 +4,9 @@ import { authenticate, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
 
-// Reports are restricted to administrators only
 router.use(authenticate);
 router.use(requireAdmin);
 
-// GET /reports/summary
 router.get('/summary', async (req, res, next) => {
   try {
     const reportData = await repo.getSummaryReport();

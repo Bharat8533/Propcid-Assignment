@@ -9,16 +9,9 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
+app.use(cors());
 app.use(express.json());
 
-// Request logger for debugging
 app.use((req, res, next) => {
   if (process.env.NODE_ENV !== 'test') {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -26,17 +19,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// Routes
 app.use('/auth', authRouter);
 app.use('/registrations', registrationsRouter);
 app.use('/reports', reportsRouter);
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     error: {
@@ -46,9 +36,39 @@ app.use((req, res) => {
   });
 });
 
-// Centralized error handling
 app.use((err, req, res, next) => {
   console.error('[SERVER ERROR]', err);
+
+  if (err.code === '23505') {
+    const isMobile = err.constraint === 'idx_unique_mobile_active' || String(err.detail || err.message).includes('mobile');
+    const isEmail = err.constraint === 'idx_unique_email_active' || String(err.detail || err.message).includes('email');
+    if (isMobile) {
+      return res.status(409).json({
+        error: {
+          code: 'DUPLICATE_MOBILE',
+          message: 'A registration with this mobile number already exists'
+        }
+      });
+    }
+    if (isEmail) {
+      return res.status(409).json({
+        error: {
+          code: 'DUPLICATE_EMAIL',
+          message: 'A registration with this email already exists'
+        }
+      });
+    }
+  }
+
+  if (['ETIMEDOUT', 'ECONNRESET', 'ECONNABORTED'].includes(err.code) || String(err.message || '').toLowerCase().includes('timeout')) {
+    return res.status(503).json({
+      error: {
+        code: 'DB_TIMEOUT',
+        message: 'Database connection timed out. Please try again in a moment.'
+      }
+    });
+  }
+
   const status = err.status || 500;
   res.status(status).json({
     error: {

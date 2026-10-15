@@ -29,7 +29,6 @@ export default function LoginPage({ onLoginSuccess }) {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
       <div className="max-w-md w-full bg-white rounded-lg border border-slate-200 shadow-sm p-6 sm:p-8">
-        {/* Brand Header */}
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-3">
             <div className="w-9 h-9 bg-slate-900 text-white flex items-center justify-center rounded font-bold text-sm">
@@ -41,14 +40,12 @@ export default function LoginPage({ onLoginSuccess }) {
           <p className="text-xs text-slate-500 mt-1">Builder &amp; Broker Compliance Registration Platform</p>
         </div>
 
-        {/* Error Alert */}
         {errorMessage && (
           <div className="bg-red-50 text-red-700 border border-red-200 rounded-md p-3 text-xs font-medium mb-4">
             {errorMessage}
           </div>
         )}
 
-        {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1.5" htmlFor="staff-email">

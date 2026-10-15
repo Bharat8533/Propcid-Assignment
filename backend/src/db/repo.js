@@ -5,7 +5,6 @@ let memRegIdCounter = 100;
 let memOtpIdCounter = 100;
 
 export const repo = {
-  // Staff methods
   async findStaffByEmail(email) {
     const cleanEmail = String(email || '').trim().toLowerCase();
     if (isDbConnected()) {
@@ -35,7 +34,6 @@ export const repo = {
     return memoryDb.staff.map(({ password_hash, ...safe }) => safe);
   },
 
-  // Registration methods
   async findActiveByMobile(mobile, excludeId = null) {
     const cleanMobile = normaliseMobile(mobile);
     if (!cleanMobile) return null;
@@ -45,7 +43,11 @@ export const repo = {
         SELECT r.*, s.name as agent_name 
         FROM registrations r
         JOIN staff s ON r.agent_id = s.id
-        WHERE r.deleted_at IS NULL AND r.mobile = $1
+        WHERE r.deleted_at IS NULL 
+          AND (
+            r.mobile = $1 
+            OR REGEXP_REPLACE(REGEXP_REPLACE(r.mobile, '^(\\+91|91)', ''), '[\\s\\-\\+]', '', 'g') = $1
+          )
       `;
       const params = [cleanMobile];
       if (excludeId) {
@@ -138,15 +140,18 @@ export const repo = {
           $25, $26
         ) RETURNING *
       `;
+      const cleanMobile = data.mobile ? (normaliseMobile(data.mobile) || null) : null;
+      const cleanEmail = data.email ? String(data.email).trim().toLowerCase() : null;
+
       const params = [
         data.agent_id,
         data.user_type,
         data.status || 'draft',
         data.completion || 0,
         data.full_name || null,
-        data.email || null,
+        cleanEmail,
         Boolean(data.email_verified),
-        data.mobile || null,
+        cleanMobile,
         Boolean(data.mobile_verified),
         data.gender || null,
         data.dob || null,
@@ -154,9 +159,9 @@ export const repo = {
         data.city || null,
         data.state || null,
         data.pincode || null,
-        data.experience_years !== undefined && data.experience_years !== null ? Number(data.experience_years) : null,
-        data.languages || [],
-        data.areas_of_expertise || [],
+        data.experience_years !== undefined && data.experience_years !== null && data.experience_years !== '' ? Number(data.experience_years) : null,
+        Array.isArray(data.languages) ? data.languages : [],
+        Array.isArray(data.areas_of_expertise) ? data.areas_of_expertise : [],
         data.pan_number ? String(data.pan_number).toUpperCase() : null,
         data.about || null,
         data.company_name || null,
@@ -170,6 +175,9 @@ export const repo = {
       return res.rows[0];
     }
 
+    const cleanMobileMem = data.mobile ? (normaliseMobile(data.mobile) || null) : null;
+    const cleanEmailMem = data.email ? String(data.email).trim().toLowerCase() : null;
+
     const newRecord = {
       id: ++memRegIdCounter,
       agent_id: data.agent_id,
@@ -177,9 +185,9 @@ export const repo = {
       status: data.status || 'draft',
       completion: data.completion || 0,
       full_name: data.full_name || null,
-      email: data.email || null,
+      email: cleanEmailMem,
       email_verified: Boolean(data.email_verified),
-      mobile: data.mobile || null,
+      mobile: cleanMobileMem,
       mobile_verified: Boolean(data.mobile_verified),
       gender: data.gender || null,
       dob: data.dob || null,
@@ -187,7 +195,7 @@ export const repo = {
       city: data.city || null,
       state: data.state || null,
       pincode: data.pincode || null,
-      experience_years: data.experience_years !== undefined && data.experience_years !== null ? Number(data.experience_years) : null,
+      experience_years: data.experience_years !== undefined && data.experience_years !== null && data.experience_years !== '' ? Number(data.experience_years) : null,
       languages: Array.isArray(data.languages) ? data.languages : [],
       areas_of_expertise: Array.isArray(data.areas_of_expertise) ? data.areas_of_expertise : [],
       pan_number: data.pan_number ? String(data.pan_number).toUpperCase() : null,
@@ -241,30 +249,33 @@ export const repo = {
         WHERE id = $25 AND deleted_at IS NULL
         RETURNING *
       `;
+      const cleanMobile = data.mobile !== undefined ? (data.mobile ? (normaliseMobile(data.mobile) || null) : null) : undefined;
+      const cleanEmail = data.email !== undefined ? (data.email ? String(data.email).trim().toLowerCase() : null) : undefined;
+
       const params = [
         data.user_type,
         data.status,
         data.completion,
-        data.full_name,
-        data.email,
+        data.full_name || null,
+        cleanEmail !== undefined ? cleanEmail : null,
         Boolean(data.email_verified),
-        data.mobile,
+        cleanMobile !== undefined ? cleanMobile : null,
         Boolean(data.mobile_verified),
-        data.gender,
-        data.dob,
-        data.office_address,
-        data.city,
-        data.state,
-        data.pincode,
-        data.experience_years !== undefined && data.experience_years !== null ? Number(data.experience_years) : null,
-        data.languages || [],
-        data.areas_of_expertise || [],
+        data.gender || null,
+        data.dob || null,
+        data.office_address || null,
+        data.city || null,
+        data.state || null,
+        data.pincode || null,
+        data.experience_years !== undefined && data.experience_years !== null && data.experience_years !== '' ? Number(data.experience_years) : null,
+        Array.isArray(data.languages) ? data.languages : [],
+        Array.isArray(data.areas_of_expertise) ? data.areas_of_expertise : [],
         data.pan_number ? String(data.pan_number).toUpperCase() : null,
-        data.about,
-        data.company_name,
-        data.company_type,
+        data.about || null,
+        data.company_name || null,
+        data.company_type || null,
         data.gst_number ? String(data.gst_number).toUpperCase() : null,
-        data.about_company,
+        data.about_company || null,
         now,
         numId
       ];
@@ -279,6 +290,8 @@ export const repo = {
     const updated = {
       ...current,
       ...data,
+      mobile: data.mobile !== undefined ? (data.mobile ? (normaliseMobile(data.mobile) || null) : null) : current.mobile,
+      email: data.email !== undefined ? (data.email ? String(data.email).trim().toLowerCase() : null) : current.email,
       pan_number: data.pan_number !== undefined ? (data.pan_number ? String(data.pan_number).toUpperCase() : null) : current.pan_number,
       gst_number: data.gst_number !== undefined ? (data.gst_number ? String(data.gst_number).toUpperCase() : null) : current.gst_number,
       updated_at: now
@@ -382,7 +395,6 @@ export const repo = {
       };
     }
 
-    // In-Memory list & filter
     let items = memoryDb.registrations.filter(r => r.deleted_at === null);
 
     if (status && status !== 'all') {
@@ -436,7 +448,6 @@ export const repo = {
     };
   },
 
-  // OTP methods
   async upsertOtp(registrationId, channel, targetValue, code, expiresAt, resendAfter) {
     const regId = Number(registrationId);
     if (isDbConnected()) {
@@ -507,7 +518,6 @@ export const repo = {
     if (idx >= 0) memoryDb.otps.splice(idx, 1);
   },
 
-  // Reports
   async getSummaryReport() {
     const allStaff = await this.getAllStaff();
     const agents = allStaff.filter(s => s.role === 'agent');

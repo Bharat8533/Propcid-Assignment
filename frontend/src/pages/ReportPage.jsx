@@ -16,7 +16,6 @@ export default function ReportPage({
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
 
-  // Filters
   const [filters, setFilters] = useState({
     q: '',
     status: '',
@@ -26,7 +25,6 @@ export default function ReportPage({
     to: ''
   });
 
-  // Delete modal state
   const [deleteModalState, setDeleteModalState] = useState({
     isOpen: false,
     registration: null
@@ -48,14 +46,46 @@ export default function ReportPage({
         if (!params[k]) delete params[k];
       });
 
+      const summaryPromise = isAdmin
+        ? api.getSummary(params).catch((err) => {
+            console.warn('Admin summary fetch error:', err);
+            return null;
+          })
+        : Promise.resolve(null);
+
       const [summaryRes, listRes] = await Promise.all([
-        api.getSummary(params),
+        summaryPromise,
         api.getRegistrations(params)
       ]);
 
       if (summaryRes) {
         setSummary(summaryRes.summary);
         if (summaryRes.agentStats) setAgentStats(summaryRes.agentStats);
+      } else if (!isAdmin && listRes) {
+        const items = listRes.items || [];
+        const total = listRes.pagination?.total ?? items.length;
+        const submitted = items.filter(r => r.status === 'submitted').length;
+        const drafts = items.filter(r => r.status === 'draft').length;
+        const stale = items.filter(r => isDraftStale(r.updated_at, r.status)).length;
+        setSummary({
+          total: {
+            total,
+            builder: items.filter(r => r.user_type === 'builder').length,
+            broker: items.filter(r => r.user_type === 'broker').length
+          },
+          submitted: {
+            total: submitted,
+            builder: items.filter(r => r.status === 'submitted' && r.user_type === 'builder').length,
+            broker: items.filter(r => r.status === 'submitted' && r.user_type === 'broker').length
+          },
+          drafts: {
+            total: drafts,
+            builder: items.filter(r => r.status === 'draft' && r.user_type === 'builder').length,
+            broker: items.filter(r => r.status === 'draft' && r.user_type === 'broker').length
+          },
+          staleDrafts: { total: stale, builder: 0, broker: 0 },
+          createdToday: { total: 0, builder: 0, broker: 0 }
+        });
       }
 
       if (listRes) {
@@ -65,7 +95,7 @@ export default function ReportPage({
         }
       }
     } catch (err) {
-      showToast(err.message || 'Error fetching report data', 'error');
+      showToast(err.message || 'Error fetching registrations', 'error');
     } finally {
       setLoading(false);
     }
@@ -101,7 +131,6 @@ export default function ReportPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-20">
-      {/* Page Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4 pb-4 border-b border-slate-200">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
@@ -110,7 +139,7 @@ export default function ReportPage({
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             {isAdmin
               ? 'Complete overview of all broker and builder submissions across field agents.'
-              : `Records submitted and managed by ${currentUser.name}.`}
+              : `Registrations submitted and managed by ${currentUser.name}.`}
           </p>
         </div>
 
@@ -124,10 +153,8 @@ export default function ReportPage({
         )}
       </div>
 
-      {/* SUMMARY KPI METRIC CARDS */}
       {summary && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-          {/* Card 1: Total */}
           <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
               Total Registrations
@@ -142,7 +169,6 @@ export default function ReportPage({
             </div>
           </div>
 
-          {/* Card 2: Submitted */}
           <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700 block">
               Submitted (Complete)
@@ -157,7 +183,6 @@ export default function ReportPage({
             </div>
           </div>
 
-          {/* Card 3: Drafts */}
           <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-700 block">
               Active Drafts
@@ -172,7 +197,6 @@ export default function ReportPage({
             </div>
           </div>
 
-          {/* Card 4: Stale Drafts (R8) */}
           <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-red-700 block">
               Stale Drafts (&gt;7d)
@@ -187,7 +211,6 @@ export default function ReportPage({
             </div>
           </div>
 
-          {/* Card 5: Created Today (R9) */}
           <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs col-span-2 md:col-span-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-700 block">
               Created Today
@@ -204,7 +227,6 @@ export default function ReportPage({
         </div>
       )}
 
-      {/* PER-AGENT TABLE (Admins Only) */}
       {isAdmin && agentStats.length > 0 && (
         <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden mb-6">
           <div className="p-3.5 bg-slate-50 border-b border-slate-200">
@@ -252,12 +274,9 @@ export default function ReportPage({
         </div>
       )}
 
-      {/* REGISTRATIONS DIRECTORY & FILTER BAR */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
-        {/* Filter Controls */}
         <div className="p-3.5 sm:p-4 border-b border-slate-200 bg-slate-50/50">
           <div className="flex flex-wrap gap-2.5 items-center">
-            {/* Search */}
             <form onSubmit={handleSearchSubmit} className="flex gap-1.5 flex-1 min-w-[200px]">
               <input
                 type="text"
@@ -274,7 +293,6 @@ export default function ReportPage({
               </button>
             </form>
 
-            {/* Status Filter */}
             <select
               value={filters.status}
               onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
@@ -285,7 +303,6 @@ export default function ReportPage({
               <option value="submitted">Submitted Only</option>
             </select>
 
-            {/* Type Filter */}
             <select
               value={filters.type}
               onChange={(e) => setFilters((prev) => ({ ...prev, type: e.target.value }))}
@@ -296,7 +313,6 @@ export default function ReportPage({
               <option value="broker">Brokers</option>
             </select>
 
-            {/* Agent filter (Admin only) */}
             {isAdmin && (
               <select
                 value={filters.agentId}
@@ -312,7 +328,6 @@ export default function ReportPage({
               </select>
             )}
 
-            {/* Date Range: From */}
             <div className="flex items-center gap-1">
               <span className="text-[11px] text-slate-500">From:</span>
               <input
@@ -323,7 +338,6 @@ export default function ReportPage({
               />
             </div>
 
-            {/* Date Range: To */}
             <div className="flex items-center gap-1">
               <span className="text-[11px] text-slate-500">To:</span>
               <input
@@ -334,7 +348,6 @@ export default function ReportPage({
               />
             </div>
 
-            {/* Reset Filters */}
             <button
               type="button"
               onClick={() => setFilters({ q: '', status: '', type: '', agentId: '', from: '', to: '' })}
@@ -345,7 +358,6 @@ export default function ReportPage({
           </div>
         </div>
 
-        {/* Table Content */}
         <div className="overflow-x-auto">
           {loading ? (
             <div className="p-10 text-center text-slate-500 text-xs">
@@ -481,7 +493,6 @@ export default function ReportPage({
           )}
         </div>
 
-        {/* Paging Footer */}
         {pagination.totalPages > 1 && (
           <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600 bg-slate-50">
             <span>
@@ -508,7 +519,6 @@ export default function ReportPage({
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
       <DeleteModal
         isOpen={deleteModalState.isOpen}
         registration={deleteModalState.registration}

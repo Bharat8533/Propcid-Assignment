@@ -1,4 +1,3 @@
-// Official 28 States and 8 Union Territories
 export const INDIAN_STATES_AND_UTS = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
   "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
@@ -22,7 +21,6 @@ export const COMPANY_TYPES = [
   "Private Limited", "LLP", "Partnership", "Proprietorship"
 ];
 
-// Normalise mobile: accepts +91, spaces, dashes; returns 10 digits
 export function normaliseMobile(val) {
   if (!val) return '';
   let str = String(val).replace(/[\s\-\+]/g, '');
@@ -32,7 +30,6 @@ export function normaliseMobile(val) {
   return str.trim();
 }
 
-// Calculate age today based on India time (Asia/Kolkata, Rule R9)
 export function calculateAgeInIndia(dobString) {
   if (!dobString) return null;
   const parts = String(dobString).split('-');
@@ -61,7 +58,6 @@ export function calculateAgeInIndia(dobString) {
   return age;
 }
 
-// Validate single field
 export function validateField(name, value, form = {}) {
   if (value === undefined || value === null || value === '') return null;
   const val = typeof value === 'string' ? value.trim() : value;
@@ -120,30 +116,30 @@ export function validateField(name, value, form = {}) {
     }
 
     case 'languages':
-      if (!Array.isArray(val) || val.length === 0) return 'Select at least 1 language';
-      if (val.some(l => !MANDATORY_LANGUAGES.includes(l))) return 'Invalid language selected';
+      if (!Array.isArray(val) || val.length === 0) return 'Select at least one language';
+      for (const lang of val) {
+        if (!MANDATORY_LANGUAGES.includes(lang)) return `Invalid language: ${lang}`;
+      }
       return null;
 
     case 'areas_of_expertise':
-      if (!Array.isArray(val) || val.length < 1 || val.length > 3) return 'Choose 1 to 3 areas of expertise';
-      if (val.some(a => !AREAS_OF_EXPERTISE.includes(a))) return 'Invalid area selected';
+      if (!Array.isArray(val) || val.length < 1 || val.length > 3) {
+        return 'Select between 1 and 3 areas of expertise';
+      }
+      for (const area of val) {
+        if (!AREAS_OF_EXPERTISE.includes(area)) return `Invalid area: ${area}`;
+      }
       return null;
 
-    // Broker fields
     case 'pan_number': {
       const pan = String(val).toUpperCase();
-      if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) return 'Invalid PAN format (e.g. ABCDE1234F)';
-      if (userType === 'broker') {
-        if (pan[3] !== 'P') return 'Broker is an individual, 4th letter must be "P"';
-      } else if (userType === 'builder') {
-        if (form.gst_number) {
-          const expectedPan = form.gst_number.substring(2, 12).toUpperCase();
-          if (pan !== expectedPan) return `Must match characters 3-12 of GST (${expectedPan})`;
-        }
-        const cType = form.company_type;
-        if (cType === 'Private Limited' && pan[3] !== 'C') return '4th letter must be "C" for Private Limited';
-        if ((cType === 'LLP' || cType === 'Partnership') && pan[3] !== 'F') return '4th letter must be "F" for LLP/Partnership';
-        if (cType === 'Proprietorship' && pan[3] !== 'P') return '4th letter must be "P" for Proprietorship';
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) return 'Invalid PAN (Format: 5 letters, 4 numbers, 1 letter)';
+      const fourthChar = pan[3];
+      if (userType === 'broker' && !['P', 'H'].includes(fourthChar)) {
+        return 'Broker PAN 4th character must be P (Individual) or H (HUF)';
+      }
+      if (userType === 'builder' && !['C', 'P', 'H', 'F', 'A', 'T', 'B', 'L', 'J', 'G'].includes(fourthChar)) {
+        return 'Invalid PAN entity type for builder';
       }
       return null;
     }
@@ -152,7 +148,6 @@ export function validateField(name, value, form = {}) {
       if (val.length < 50 || val.length > 500) return 'Must be between 50 and 500 characters';
       return null;
 
-    // Builder fields
     case 'company_name':
       if (val.length < 2 || val.length > 100) return 'Must be between 2 and 100 characters';
       return null;
@@ -189,7 +184,6 @@ export function getRequiredFields(userType) {
   return common;
 }
 
-// R1: Draft validation - needs user_type and (name or mobile)
 export function validateDraft(formData) {
   const errors = {};
 
@@ -218,7 +212,6 @@ export function validateDraft(formData) {
   return { isValid: Object.keys(errors).length === 0, errors };
 }
 
-// R2: Submit validation - all fields valid + OTP verified
 export function validateSubmit(formData) {
   const errors = {};
 
@@ -244,7 +237,6 @@ export function validateSubmit(formData) {
   return { isValid: Object.keys(errors).length === 0, errors };
 }
 
-// R7: Completion percentage
 export function calculateCompletion(formData) {
   if (formData.status === 'submitted') return 100;
   if (!formData.user_type) return 0;
@@ -268,7 +260,6 @@ export function calculateCompletion(formData) {
   return Math.min(100, Math.floor((validCount / totalPossible) * 100));
 }
 
-// R8: Stale draft check (> 7 days)
 export function isDraftStale(updatedAt, status) {
   if (status !== 'draft' || !updatedAt) return false;
   const daysDiff = (new Date() - new Date(updatedAt)) / (1000 * 60 * 60 * 24);

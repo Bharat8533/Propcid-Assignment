@@ -13,36 +13,77 @@ const schemaPath = path.resolve(__dirname, '../../schema.sql');
 
 const { Pool } = pg;
 
-// PostgreSQL Pool configuration (supports PG_URI / DATABASE_URL for Neon / cloud Postgres)
 const connectionString = process.env.PG_URI || process.env.DATABASE_URL;
 
 export const pool = new Pool(
   connectionString
     ? {
         connectionString,
-        ssl: { rejectUnauthorized: false }
+        ssl: { rejectUnauthorized: false },
+        max: 10,
+        idleTimeoutMillis: 10000,
+        connectionTimeoutMillis: 10000,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000
       }
     : {
         host: process.env.PGHOST || 'localhost',
         port: Number(process.env.PGPORT) || 5432,
         user: process.env.PGUSER || 'postgres',
         password: process.env.PGPASSWORD || 'postgres',
-        database: process.env.PGDATABASE || 'estatedesk'
+        database: process.env.PGDATABASE || 'estatedesk',
+        max: 10,
+        idleTimeoutMillis: 10000,
+        connectionTimeoutMillis: 10000
       }
 );
 
+pool.on('error', (err) => {
+  console.warn('[DB POOL] Notice on idle client:', err.message);
+});
+
+const originalPoolQuery = pool.query.bind(pool);
+pool.query = async function (text, params) {
+  try {
+    return await originalPoolQuery(text, params);
+  } catch (err) {
+    const isNetworkGlitch =
+      ['ETIMEDOUT', 'ECONNRESET', 'ECONNABORTED', '57P01', '57P02', '57P03'].includes(err.code) ||
+      String(err.message || '').toLowerCase().includes('timeout') ||
+      String(err.message || '').toLowerCase().includes('connection');
+
+    if (isNetworkGlitch) {
+      console.warn(`[DB] Network glitch (${err.code || err.message}). Retrying query once...`);
+      await new Promise(r => setTimeout(r, 600));
+      return await originalPoolQuery(text, params);
+    }
+    throw err;
+  }
+};
+
 let isPostgresConnected = false;
 
-// Test DB connection & auto-create tables
 export async function initDb() {
   try {
     const client = await pool.connect();
     isPostgresConnected = true;
 
-    // Automatically verify and create tables, indexes, extensions, and seeds
     if (fs.existsSync(schemaPath)) {
       const sql = fs.readFileSync(schemaPath, 'utf8');
       await client.query(sql);
+      await client.query(`
+        UPDATE registrations 
+        SET mobile = REGEXP_REPLACE(REGEXP_REPLACE(mobile, '^(\\+91|91)', ''), '[\\s\\-\\+]', '', 'g')
+        WHERE mobile IS NOT NULL AND mobile ~ '[^0-9]';
+
+        UPDATE registrations
+        SET mobile = NULL
+        WHERE mobile = '';
+
+        UPDATE registrations
+        SET email = NULL
+        WHERE email = '';
+      `);
       console.log('[DB] Connected to PostgreSQL. Tables verified / auto-created successfully.');
     } else {
       console.log('[DB] Connected to PostgreSQL successfully.');
@@ -56,7 +97,6 @@ export async function initDb() {
   }
 }
 
-// In-memory fallback repository for isolated testing
 export const memoryDb = {
   staff: [
     {
@@ -85,7 +125,6 @@ export const memoryDb = {
   otps: []
 };
 
-// Generic query runner that uses Postgres if connected, or memoryDb if offline
 export async function query(text, params = []) {
   if (isPostgresConnected) {
     return pool.query(text, params);
